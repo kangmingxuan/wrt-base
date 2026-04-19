@@ -2,9 +2,9 @@
 
 [Simplified Chinese](README.zh-CN.md)
 
-wrt-base is a maintenance baseline for ImmortalWrt and OpenWrt routers. It turns one-off tasks such as installing tools, running checks, and preparing backups into repeatable, versioned scripts, so you have a stable operational starting point before deploying long-running services such as sing-box.
+wrt-base is a maintenance baseline for ImmortalWrt and OpenWrt routers. It turns one-off tasks such as installing tools, running checks, and preparing backups into repeatable, versioned scripts, so you have a stable operational starting point for the system itself.
 
-> This repository does not turn a router into a primary development machine, and it does not ship any workload-specific configuration such as sing-box subscriptions or rule sets. It only manages the system baseline.
+> This repository does not turn a router into a primary development machine. It only manages the system baseline.
 
 ## Features
 
@@ -32,8 +32,6 @@ sh scripts/install-tools.sh
 sh scripts/health-check.sh
 ```
 
-For a more detailed first-time setup flow, see [docs/setup.md](docs/setup.md).
-
 ## Repository Layout
 
 ```
@@ -43,15 +41,9 @@ scripts/
   lib/                    # Shared shell library files sourced by scripts
 tests/
   run.sh                  # Test entry point (sh -n + shellcheck + unit tests)
-docs/
-  setup.md                # First-time router setup
-  sing-box.md             # Prerequisites for deploying sing-box
-  layout.md               # Repository structure and design rules
 Makefile                  # Run make help to see optional shortcuts
 README.zh-CN.md           # Simplified Chinese README
 ```
-
-See [docs/layout.md](docs/layout.md) for the full structure and design notes.
 
 ## Common Commands
 
@@ -96,17 +88,13 @@ sh scripts/health-check.sh \
 
 Exit status: `0` means every check passed; `1` means at least one check failed.
 
-## Before Deploying sing-box
-
-See [docs/sing-box.md](docs/sing-box.md). In short: run `sh scripts/install-tools.sh` to install the toolset, run `sh scripts/health-check.sh` to verify the baseline, and keep workload repositories such as sing-box configuration separate from this one.
-
 ## Run Tests Before Submitting Changes
 
 ```sh
 sh tests/run.sh
 ```
 
-Do not submit changes with failing tests. `tests/run.sh` auto-discovers `tests/test_*.sh`, so add a matching test whenever you add a new script. See [docs/layout.md](docs/layout.md) for the project conventions.
+Do not submit changes with failing tests. `tests/run.sh` auto-discovers `tests/test_*.sh`, so add a matching test whenever you add a new script.
 
 ## License
 

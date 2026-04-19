@@ -22,7 +22,7 @@ Thank you for considering a contribution to wrt-base.
 
 ## Adding a New Script
 
-See the "Adding a New Script" section in [docs/layout.md](docs/layout.md). In short:
+In short:
 
 - Add the script under `scripts/` and source `lib/common.sh`.
 - Add a matching `test_*.sh` under `tests/` and source `_assert.sh`.

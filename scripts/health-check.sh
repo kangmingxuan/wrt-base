@@ -1,7 +1,7 @@
 #!/bin/sh
 # health-check.sh — quick health checks for a router maintenance baseline.
 #
-# Focus areas before running long-lived services such as sing-box:
+# Focus areas for the baseline:
 #   - system time (required for TLS and Reality)
 #   - free space on important mount points
 #   - memory and load

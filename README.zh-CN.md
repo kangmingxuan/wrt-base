@@ -2,9 +2,9 @@
 
 [English](README.md)
 
-wrt-base 是 ImmortalWrt / OpenWrt 路由器的维护基线。它把安装工具、运行检查、准备备份这类一次性动作收敛成可重复执行、可版本化追踪的脚本，方便你在部署 sing-box 之类长驻服务之前，先建立一个稳定的运维起点。
+wrt-base 是 ImmortalWrt / OpenWrt 路由器的维护基线。它把安装工具、运行检查、准备备份这类一次性动作收敛成可重复执行、可版本化追踪的脚本，方便你先建立一个稳定的系统运维起点。
 
-> 这个仓库不会把路由器变成主开发机，也不打包任何业务专属配置，例如 sing-box 的订阅或规则集。它只负责系统层基线。
+> 这个仓库不会把路由器变成主开发机。它只负责系统层基线。
 
 ## 特性
 
@@ -32,8 +32,6 @@ sh scripts/install-tools.sh
 sh scripts/health-check.sh
 ```
 
-更详细的首次落地流程见 [docs/setup.md](docs/setup.md)。
-
 ## 仓库布局
 
 ```
@@ -43,15 +41,9 @@ scripts/
   lib/                    # 被脚本 source 的共享 shell 库
 tests/
   run.sh                  # 测试入口（sh -n + shellcheck + 单元测试）
-docs/
-  setup.md                # 路由器首次初始化说明
-  sing-box.md             # 部署 sing-box 的前置约束
-  layout.md               # 仓库结构与设计规则
 Makefile                  # 开发机有 make 时可用的快捷目标
 README.zh-CN.md           # 简体中文 README
 ```
-
-完整结构和设计说明见 [docs/layout.md](docs/layout.md)。
 
 ## 常用命令
 
@@ -96,17 +88,13 @@ sh scripts/health-check.sh \
 
 退出码：`0` 表示全部通过，`1` 表示至少一项失败。
 
-## 部署 sing-box 之前
-
-参考 [docs/sing-box.md](docs/sing-box.md)。简而言之：先运行 `sh scripts/install-tools.sh` 装齐工具，再运行 `sh scripts/health-check.sh` 验证基线，业务仓库例如 sing-box 配置应与本仓库分离维护。
-
 ## 提交修改前请运行测试
 
 ```sh
 sh tests/run.sh
 ```
 
-不要在测试失败时提交。`tests/run.sh` 会自动发现 `tests/test_*.sh`，所以新增脚本时也应补上对应测试。项目约定见 [docs/layout.md](docs/layout.md)。
+不要在测试失败时提交。`tests/run.sh` 会自动发现 `tests/test_*.sh`，所以新增脚本时也应补上对应测试。
 
 ## 许可证
 
