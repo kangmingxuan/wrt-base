@@ -81,6 +81,7 @@ sh scripts/health-check.sh \
   --disk 85 \
   --mem 90 \
   --load 2 \
+  --skip-time \
   --skip-net \
   --quiet
 ```
@@ -88,6 +89,7 @@ sh scripts/health-check.sh \
 - `--disk 85`: warn when disk usage is 85% or higher.
 - `--mem 90`: warn when memory usage is 90% or higher.
 - `--load 2`: warn when 1-minute load divided by CPU count exceeds 2.
+- `--skip-time`: skip the system time sanity check, which is useful before NTP sync or in CI.
 - `--skip-net`: skip HTTPS outbound and DNS checks.
 - `--quiet`: print only abnormal items, which is useful for cron.
 

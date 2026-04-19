@@ -13,8 +13,8 @@ SCRIPT="$REPO_DIR/scripts/health-check.sh"
 
 assert_true "sh \"$SCRIPT\" --help" "--help succeeds"
 
-# Relax thresholds and skip network checks; this should pass
-assert_true "sh \"$SCRIPT\" --skip-net --disk 100 --mem 100 --load 1000 --quiet" \
+# Relax thresholds and skip environment-dependent checks; this should pass
+assert_true "sh \"$SCRIPT\" --skip-time --skip-net --disk 100 --mem 100 --load 1000 --quiet" \
     "relaxed thresholds with skip-net should pass"
 
 assert_summary

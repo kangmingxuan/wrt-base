@@ -21,6 +21,7 @@ SCRIPT_DIR=$(CDPATH='' cd -- "$(dirname "$SELF")" && pwd)
 DISK_THRESHOLD=85   # percentage threshold for warnings
 MEM_THRESHOLD=90
 LOAD_FACTOR=2       # warn when 1-minute load / CPU count exceeds this factor
+SKIP_TIME="false"
 SKIP_NET="false"
 QUIET="false"
 
@@ -34,6 +35,7 @@ Options:
     --disk N      Disk usage warning threshold in percent (default: 85)
     --mem N       Memory usage warning threshold in percent (default: 90)
     --load N      Warning factor for 1-minute load / CPU count (default: 2)
+    --skip-time   Skip the system time sanity check
     --skip-net    Skip outbound HTTPS and DNS checks
     --quiet       Print only failing checks
     -h, --help    Show this help message
@@ -46,6 +48,7 @@ parse_args() {
             --disk) DISK_THRESHOLD="$2"; shift ;;
             --mem)  MEM_THRESHOLD="$2"; shift ;;
             --load) LOAD_FACTOR="$2"; shift ;;
+            --skip-time) SKIP_TIME="true" ;;
             --skip-net) SKIP_NET="true" ;;
             --quiet) QUIET="true" ;;
             -h|--help) usage; exit 0 ;;
@@ -59,6 +62,7 @@ ok()   { [ "$QUIET" = "true" ] || log_info "$*"; }
 fail() { log_warn "$*"; EXIT_CODE=1; }
 
 check_time() {
+    [ "$SKIP_TIME" = "true" ] && return
     # Before NTP sync, the year is often 1970 or 2000.
     year=$(date +%Y)
     if [ "$year" -lt 2024 ]; then
