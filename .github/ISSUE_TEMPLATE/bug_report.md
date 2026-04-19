@@ -1,25 +1,25 @@
 ---
-name: Bug 报告
-about: 报告一个问题
+name: Bug report
+about: Report a problem
 title: ''
 labels: bug
 assignees: ''
 ---
 
-**环境信息**
-- 系统：（例：ImmortalWrt 24.10.4 x86/64）
-- 包管理器：opkg / apk
-- Shell：（`readlink /bin/sh` 的输出）
+**Environment**
+- System: for example, ImmortalWrt 24.10.4 x86/64
+- Package manager: opkg / apk
+- Shell: output of `readlink /bin/sh`
 
-**问题描述**
-简述遇到的问题。
+**Problem Description**
+Briefly describe the issue.
 
-**复现步骤**
-1. 执行 `...`
-2. 看到 `...`
+**Steps to Reproduce**
+1. Run `...`
+2. Observe `...`
 
-**期望行为**
-应该发生什么。
+**Expected Behavior**
+What should happen?
 
-**实际输出**
-粘贴完整的终端输出。
+**Actual Output**
+Paste the full terminal output.

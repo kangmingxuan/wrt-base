@@ -1,39 +1,46 @@
-# 仓库布局
+# Repository Layout
 
 ```
 .
-├── Makefile                # 常用任务入口
+├── Makefile
 ├── README.md
+├── README.zh-CN.md
 ├── docs/
-│   ├── setup.md            # 路由器上首次落地步骤
-│   ├── sing-box.md         # 部署 sing-box 的前置约束
-│   └── layout.md           # 本文件
+│   ├── setup.md
+│   ├── sing-box.md
+│   └── layout.md
 ├── scripts/
-│   ├── install-tools.sh    # 安装维护工具集（自动选择 opkg / apk）
-│   ├── health-check.sh     # 系统健康检查（cron 友好）
+│   ├── install-tools.sh
+│   ├── health-check.sh
 │   └── lib/
-│       ├── common.sh       # 日志、根用户检查、has_cmd、tokens
-│       └── pkg.sh          # 包管理器抽象 (opkg / apk)
+│       ├── common.sh
+│       └── pkg.sh
 └── tests/
-    ├── run.sh              # 测试入口
-    ├── _assert.sh          # 极简断言库
+    ├── run.sh
+    ├── _assert.sh
     ├── test_common.sh
     ├── test_pkg.sh
     ├── test_install_tools.sh
     └── test_health_check.sh
 ```
 
-## 设计原则
+Only three layers matter in practice:
 
-- **POSIX `/bin/sh` 优先**。OpenWrt 默认 BusyBox ash，不假设 bash 存在。
-- **lib 只能被 source，不能直接执行**。每个 lib 顶部用 `__OWRT_*_LOADED` guard 防止重复加载。
-- **包管理器解耦**。`scripts/lib/pkg.sh` 把 `opkg` / `apk` 抽成统一接口，新加管理器只要扩这一个文件。
-- **失败不静默**。`install-tools.sh` 单包失败时不中断整体，最后汇总告警；`health-check.sh` 任意一项失败就退非 0。
-- **测试自检**。`tests/run.sh` 同时跑 `sh -n`、`shellcheck`（如装了）、`test_*.sh`。
+- `scripts/` contains executable entry points, while shared logic lives in `scripts/lib/`.
+- `tests/` contains shell tests whose file names track the script or library responsibility they cover.
+- `docs/` stays limited to repository-specific documentation instead of expanding into a general operations manual.
 
-## 添加一个新脚本
+## Design Rules
 
-1. 在 `scripts/` 下新建 `your-thing.sh`，开头写：
+- **Prefer POSIX `/bin/sh`**. BusyBox ash is the default shell on OpenWrt, so do not assume bash is present.
+- **Library files are sourced, not executed directly**. Each file in `lib/` uses an `__OWRT_*_LOADED` guard to prevent duplicate sourcing.
+- **Package manager logic is isolated**. `scripts/lib/pkg.sh` provides one interface for `opkg` and `apk`, so new backends only need changes in that file.
+- **Failures must be visible**. `install-tools.sh` summarizes single-package failures; `health-check.sh` exits non-zero as soon as any check fails.
+- **Tests are part of the contract**. `tests/run.sh` runs `sh -n`, `shellcheck` when available, and every `test_*.sh` file.
+
+## Adding a New Script
+
+1. Create `your-thing.sh` under `scripts/` and start with:
 
    ```sh
    #!/bin/sh
@@ -43,5 +50,5 @@
    . "$SCRIPT_DIR/lib/common.sh"
    ```
 
-2. 在 `tests/` 下新建 `test_your_thing.sh`，引入 `_assert.sh`，写若干 `assert_*` 调用。
-3. `sh tests/run.sh` 验证；不通过别提交。
+2. Add `test_your_thing.sh` under `tests/`, source `_assert.sh`, and write the necessary `assert_*` calls.
+3. Validate with `sh tests/run.sh`. Do not submit changes with failing tests.

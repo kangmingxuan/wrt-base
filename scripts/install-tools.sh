@@ -1,9 +1,9 @@
 #!/bin/sh
-# install-tools.sh — 为 ImmortalWrt / OpenWrt 安装常用维护工具。
+# install-tools.sh — install maintenance tools for ImmortalWrt/OpenWrt.
 #
-# 默认安装 "full" 工具集，提供完整运维体验。
-# 用 --minimal 切换到精简集合。
-# 单包失败不会终止整体安装，最后会汇总告警。
+# The default mode is "full" for a complete maintenance baseline.
+# Use --minimal for a smaller troubleshooting-oriented set.
+# Single-package failures do not abort the run; warnings are summarized at the end.
 
 set -u
 
@@ -22,9 +22,9 @@ FAILED_PACKAGES=""
 OPTIONAL_PACKAGES="shellcheck"
 TCPDUMP_FULL_MIN_FREE_KB="16384"
 
-# ---- 包集合定义 ------------------------------------------------------------
+# ---- Package set definitions ----------------------------------------------
 
-# 基础维护：所有模式都装。
+# Baseline tools: installed in every mode.
 BASE_PACKAGES="
 bash
 ca-bundle
@@ -37,14 +37,14 @@ nano
 tmux
 "
 
-# 网络与系统排障最小集合：minimal 与 full 都装。
+# Minimum network and system troubleshooting set: installed in minimal and full.
 MINIMAL_PACKAGES="
 bind-dig
 ip-full
 openssl-util
 "
 
-# 完整运维集合：仅 full 模式安装。
+# Full maintenance set: installed only in full mode.
 FULL_PACKAGES="
 coreutils
 diffutils
@@ -74,23 +74,23 @@ unzip
 
 usage() {
     cat <<'EOF'
-用法: install-tools.sh [选项]
+Usage: install-tools.sh [options]
 
-为 ImmortalWrt / OpenWrt 安装常用维护工具，自动检测 opkg 或 apk。
+Install common maintenance tools for ImmortalWrt/OpenWrt with automatic opkg/apk detection.
 
-选项:
-  --minimal       只安装基础 + 排障最小集合
-  --full          安装完整集合（默认）
-  --print-only    只打印待安装列表，不执行安装
-  --dry-run       检测包管理器并打印将执行的动作，不真正安装
-  --skip-update   跳过软件源 update
-  -h, --help      显示帮助
+Options:
+    --minimal       Install only the baseline and minimum troubleshooting set
+    --full          Install the full set (default)
+    --print-only    Print the package list without installing anything
+    --dry-run       Detect the package manager and print actions without installing
+    --skip-update   Skip package feed update
+    -h, --help      Show this help message
 
-环境变量:
-  OWRT_PKG_MANAGER  强制指定 opkg 或 apk（用于测试）
-    OWRT_TCPDUMP_VARIANT  强制指定 tcpdump 变体: auto|full|mini
-    OWRT_STORAGE_FREE_KB  覆盖自动探测到的可用空间（用于测试）
-  OWRT_DEBUG=1      打印调试日志
+Environment:
+    OWRT_PKG_MANAGER      Force opkg or apk (useful for tests)
+    OWRT_TCPDUMP_VARIANT  Force the tcpdump variant: auto|full|mini
+    OWRT_STORAGE_FREE_KB  Override detected free storage in KB (useful for tests)
+    OWRT_DEBUG=1          Enable debug logs
 EOF
 }
 
@@ -103,13 +103,13 @@ parse_args() {
             --dry-run) DRY_RUN="true" ;;
             --skip-update) SKIP_UPDATE="true" ;;
             -h|--help) usage; exit 0 ;;
-            *) die "未知选项: $1（用 --help 查看用法）" ;;
+            *) die "unknown option: $1 (use --help for usage)" ;;
         esac
         shift
     done
 }
 
-# ---- 核心逻辑 -------------------------------------------------------------
+# ---- Core logic ------------------------------------------------------------
 
 selected_packages() {
     tokens "$BASE_PACKAGES"
@@ -135,36 +135,36 @@ get_storage_free_kb() {
 choose_tcpdump_package() {
     case "${OWRT_TCPDUMP_VARIANT:-auto}" in
         full)
-            log_info "按环境变量强制选择完整版 tcpdump"
+            log_info "forcing full tcpdump via environment override"
             printf '%s\n' tcpdump
             return 0
             ;;
         mini)
-            log_info "按环境变量强制选择精简版 tcpdump-mini"
+            log_info "forcing tcpdump-mini via environment override"
             printf '%s\n' tcpdump-mini
             return 0
             ;;
         auto|'')
             ;;
         *)
-            die "OWRT_TCPDUMP_VARIANT 仅支持 auto|full|mini"
+            die "OWRT_TCPDUMP_VARIANT only supports auto|full|mini"
             ;;
     esac
 
     free_kb=$(get_storage_free_kb)
     case "$free_kb" in
         ''|*[!0-9]*)
-            log_warn "无法识别当前可用存储，默认选择 tcpdump-mini"
+            log_warn "unable to detect free storage; defaulting to tcpdump-mini"
             printf '%s\n' tcpdump-mini
             return 0
             ;;
     esac
 
     if [ "$free_kb" -ge "$TCPDUMP_FULL_MIN_FREE_KB" ]; then
-        log_info "当前可用存储 ${free_kb}KB，选择完整版 tcpdump"
+        log_info "${free_kb}KB free; selecting full tcpdump"
         printf '%s\n' tcpdump
     else
-        log_info "当前可用存储 ${free_kb}KB，不足 ${TCPDUMP_FULL_MIN_FREE_KB}KB，选择 tcpdump-mini"
+        log_info "${free_kb}KB free, below ${TCPDUMP_FULL_MIN_FREE_KB}KB; selecting tcpdump-mini"
         printf '%s\n' tcpdump-mini
     fi
 }
@@ -183,13 +183,13 @@ should_skip_package() {
     case "$package_name" in
         tcpdump-mini)
             if pkg_is_installed tcpdump; then
-                log_info "已安装完整版 tcpdump，跳过冲突包: tcpdump-mini"
+                log_info "full tcpdump is already installed; skipping conflicting package: tcpdump-mini"
                 return 0
             fi
             ;;
         tcpdump)
             if pkg_is_installed tcpdump-mini; then
-                log_info "已安装 tcpdump-mini，跳过冲突包: tcpdump"
+                log_info "tcpdump-mini is already installed; skipping conflicting package: tcpdump"
                 return 0
             fi
             ;;
@@ -198,8 +198,8 @@ should_skip_package() {
     return 1
 }
 
-# 注意：管道右侧在 POSIX sh 里运行在子 shell，
-# 所以失败列表先写入临时文件，主 shell 再读回 FAILED_PACKAGES。
+# In POSIX sh, the right side of a pipeline runs in a subshell.
+# Store failures in a temp file first, then read them back into FAILED_PACKAGES.
 install_all_collect() {
     tmp=$(mktemp 2>/dev/null || printf '/tmp/owrt-install.%s' "$$")
     : > "$tmp"
@@ -209,27 +209,27 @@ install_all_collect() {
             continue
         fi
         if pkg_is_installed "$pkg"; then
-            log_info "已安装，跳过: $pkg"
+            log_info "already installed; skipping: $pkg"
             continue
         fi
         if ! pkg_is_available "$pkg"; then
             if is_optional_package "$pkg"; then
-                log_warn "当前软件源未提供可选包，已跳过: $pkg"
+                log_warn "optional package is unavailable in the current feed; skipped: $pkg"
                 continue
             fi
             printf '%s\n' "$pkg" >>"$tmp"
-            log_warn "当前软件源未提供该包: $pkg"
+            log_warn "package is unavailable in the current feed: $pkg"
             continue
         fi
         if [ "$DRY_RUN" = "true" ]; then
-            log_info "[dry-run] 将安装: $pkg"
+            log_info "[dry-run] would install: $pkg"
             continue
         fi
         if pkg_install "$pkg" >/dev/null 2>&1; then
-            log_info "安装完成: $pkg"
+            log_info "installed: $pkg"
         else
             printf '%s\n' "$pkg" >>"$tmp"
-            log_warn "安装失败，已跳过: $pkg"
+            log_warn "installation failed and was skipped: $pkg"
         fi
     done
     FAILED_PACKAGES=$(tr '\n' ' ' <"$tmp" | sed 's/ $//')
@@ -244,26 +244,26 @@ main() {
         exit 0
     fi
 
-    pkg_detect || die "未检测到 opkg 或 apk，当前系统不像 OpenWrt / ImmortalWrt"
-    log_info "包管理器: $PKG_MANAGER"
-    log_info "安装模式: $MODE"
+    pkg_detect || die "failed to detect opkg or apk; this does not look like OpenWrt or ImmortalWrt"
+    log_info "package manager: $PKG_MANAGER"
+    log_info "installation mode: $MODE"
 
     if [ "$DRY_RUN" != "true" ]; then
         require_root
     fi
 
     if [ "$SKIP_UPDATE" != "true" ] && [ "$DRY_RUN" != "true" ]; then
-        pkg_update || die "$PKG_MANAGER update 失败，检查软件源后重试"
+        pkg_update || die "$PKG_MANAGER update failed; check package feeds and try again"
     fi
 
     install_all_collect
 
     if [ -n "$FAILED_PACKAGES" ]; then
-        log_warn "下列包未能安装，请按当前固件软件源情况手动确认: $FAILED_PACKAGES"
+        log_warn "the following packages could not be installed; verify them against the current firmware feeds: $FAILED_PACKAGES"
         exit 0
     fi
 
-    log_info "工具安装完成"
+    log_info "tool installation complete"
 }
 
 main "$@"

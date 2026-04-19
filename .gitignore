@@ -1,12 +1,12 @@
-# OS / 编辑器
+# OS / editors
 .DS_Store
 *.swp
 *~
 
-# 临时输出
+# Temporary output
 /tmp-*
 *.log
 
-# 本地敏感配置（不应进仓库）
+# Local sensitive configuration that should never be committed
 local.env
 *.local.sh

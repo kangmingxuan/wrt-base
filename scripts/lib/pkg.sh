@@ -1,16 +1,16 @@
 #!/bin/sh
-# pkg.sh — 包管理器抽象层，统一 opkg 和 apk 的接口。
+# pkg.sh — package manager abstraction for opkg and apk.
 #
-# OpenWrt 23.05 / ImmortalWrt 24.10 仍使用 opkg；
-# OpenWrt SNAPSHOT / 25.x 起切换到 apk-tools (apk-mk2)。
-# 这一层让上层脚本不用关心具体管理器。
+# OpenWrt 23.05 and ImmortalWrt 24.10 still use opkg.
+# Newer OpenWrt snapshots and 25.x switch to apk-tools.
+# This layer keeps higher-level scripts independent from the backend.
 #
-# 提供:
-#   pkg_detect              填充 PKG_MANAGER (opkg|apk)
-#   pkg_update              刷新软件源元数据
-#   pkg_is_available NAME   检查软件源是否提供该包
-#   pkg_is_installed NAME   检查包是否已安装
-#   pkg_install NAME        安装单个包
+# Provides:
+#   pkg_detect              populate PKG_MANAGER (opkg|apk)
+#   pkg_update              refresh package feed metadata
+#   pkg_is_available NAME   check whether a package exists in the feed
+#   pkg_is_installed NAME   check whether a package is installed
+#   pkg_install NAME        install a single package
 
 # shellcheck shell=sh
 
@@ -25,7 +25,7 @@ pkg_detect() {
     if [ -n "${OWRT_PKG_MANAGER:-}" ]; then
         PKG_MANAGER="$OWRT_PKG_MANAGER"
     elif command -v apk >/dev/null 2>&1 && apk --version 2>/dev/null | grep -qi 'apk'; then
-        # 优先 apk：新版 OpenWrt 用它
+        # Prefer apk on newer OpenWrt releases.
         PKG_MANAGER="apk"
     elif command -v opkg >/dev/null 2>&1; then
         PKG_MANAGER="opkg"

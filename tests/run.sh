@@ -1,12 +1,12 @@
 #!/bin/sh
-# tests/run.sh — 跑仓库内全部测试。
+# tests/run.sh — run every test in the repository.
 #
-# 步骤:
-#   1. POSIX `sh -n` 语法校验所有 .sh 文件
-#   2. 如果装了 shellcheck，执行静态检查
-#   3. 跑 tests/test_*.sh 下的所有用例
+# Steps:
+#   1. Validate POSIX shell syntax with `sh -n`
+#   2. Run shellcheck when it is available
+#   3. Execute every file that matches tests/test_*.sh
 #
-# 退出码: 0 全通过，非 0 表示有失败。
+# Exit status: 0 means success, non-zero means at least one failure.
 
 set -u
 
@@ -27,9 +27,9 @@ record_fail() {
     FAILED_NAMES="$FAILED_NAMES\n  - $1"
 }
 
-# ---- 1. 语法 -------------------------------------------------------------
+# ---- 1. Syntax ------------------------------------------------------------
 
-log_info "== 阶段 1: sh -n 语法校验 =="
+log_info "== Phase 1: sh -n syntax check =="
 SH_FILES=$(find "$REPO_DIR/scripts" "$REPO_DIR/tests" -type f -name '*.sh')
 for f in $SH_FILES; do
     if sh -n "$f" 2>/dev/null; then
@@ -37,14 +37,14 @@ for f in $SH_FILES; do
         log_debug "syntax OK: $f"
     else
         record_fail "syntax: $f"
-        log_warn "语法错误: $f"
+        log_warn "syntax error: $f"
         sh -n "$f" || true
     fi
 done
 
-# ---- 2. shellcheck（可选）-----------------------------------------------
+# ---- 2. shellcheck (optional) --------------------------------------------
 
-log_info "== 阶段 2: shellcheck =="
+log_info "== Phase 2: shellcheck =="
 if command -v shellcheck >/dev/null 2>&1; then
     for f in $SH_FILES; do
         if shellcheck -x "$f"; then
@@ -55,15 +55,15 @@ if command -v shellcheck >/dev/null 2>&1; then
         fi
     done
 else
-    log_info "未安装 shellcheck，跳过静态检查"
+    log_info "shellcheck is not installed; skipping static analysis"
 fi
 
-# ---- 3. 单元测试 ---------------------------------------------------------
+# ---- 3. Unit tests --------------------------------------------------------
 
-log_info "== 阶段 3: 单元测试 =="
+log_info "== Phase 3: unit tests =="
 TEST_FILES=$(find "$TESTS_DIR" -type f -name 'test_*.sh' | sort)
 if [ -z "$TEST_FILES" ]; then
-    log_warn "未发现测试用例"
+    log_warn "no test cases found"
 else
     for t in $TEST_FILES; do
         name=$(basename "$t")
@@ -78,13 +78,13 @@ else
     done
 fi
 
-# ---- 汇总 ---------------------------------------------------------------
+# ---- Summary --------------------------------------------------------------
 
 printf '\n'
-log_info "通过: $PASS  失败: $FAIL"
+log_info "passed: $PASS  failed: $FAIL"
 if [ "$FAIL" -gt 0 ]; then
     # shellcheck disable=SC2059
-    printf "失败列表:$FAILED_NAMES\n" >&2
+    printf "failed cases:$FAILED_NAMES\n" >&2
     exit 1
 fi
 exit 0

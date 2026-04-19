@@ -1,18 +1,18 @@
 #!/bin/sh
-# common.sh — shared helpers for openwrt-maintenance scripts.
+# common.sh — shared helpers for wrt-base scripts.
 #
-# 这个文件用 `.` (source) 引入，不要直接执行。
-# 提供日志输出、根用户检查、命令存在性检查等通用工具。
+# Source this file with `.`. It is not meant to be executed directly.
+# Provides logging, root checks, command detection, and token helpers.
 
 # shellcheck shell=sh
 
-# 防止重复加载。
+# Prevent duplicate sourcing.
 if [ -n "${__OWRT_COMMON_LOADED:-}" ]; then
     return 0 2>/dev/null || exit 0
 fi
 __OWRT_COMMON_LOADED=1
 
-# 颜色输出仅在 stderr 是 TTY 时启用。
+# Enable colored output only when stderr is a TTY.
 if [ -t 2 ]; then
     __C_RED=$(printf '\033[31m')
     __C_YEL=$(printf '\033[33m')
@@ -37,15 +37,15 @@ die() {
 }
 
 require_root() {
-    [ "$(id -u)" = "0" ] || die "请使用 root 用户执行"
+    [ "$(id -u)" = "0" ] || die "please run as root"
 }
 
 has_cmd() {
     command -v "$1" >/dev/null 2>&1
 }
 
-# 把多行字符串按空白拆成一行行非空记号，输出到 stdout。
-# 用法: tokens "$STRING"
+# Split multiline text into non-empty whitespace-delimited tokens, one per line.
+# Usage: tokens "$STRING"
 tokens() {
     # shellcheck disable=SC2086
     printf '%s\n' $1 | awk 'NF'

@@ -1,54 +1,54 @@
-# 贡献指南
+# Contributing
 
-感谢你考虑为 openwrt-maintenance 做贡献！
+Thank you for considering a contribution to wrt-base.
 
-## 开始之前
+## Before You Start
 
-- 所有脚本必须用 **POSIX `/bin/sh`** 编写，不假设 bash 存在。
-- OpenWrt 默认 shell 是 BusyBox ash，请避免使用 bash-only 语法。
+- All scripts must use POSIX `/bin/sh`. Do not assume bash is available.
+- BusyBox ash is the default shell on OpenWrt, so avoid bash-specific syntax.
 
-## 开发流程
+## Development Flow
 
-1. Fork 仓库并创建特性分支。
-2. 修改代码。
-3. 运行测试：
+1. Fork the repository and create a feature branch.
+2. Make your changes.
+3. Run the test suite:
 
    ```sh
    sh tests/run.sh
    ```
 
-4. 确保测试全部通过后提交。
-5. 提交 Pull Request，简要说明改动目的。
+4. Submit only after all tests pass.
+5. Open a pull request and briefly explain the purpose of the change.
 
-## 添加新脚本
+## Adding a New Script
 
-参考 [docs/layout.md](docs/layout.md) 中"添加一个新脚本"一节。要点：
+See the "Adding a New Script" section in [docs/layout.md](docs/layout.md). In short:
 
-- 在 `scripts/` 下新建脚本，引入 `lib/common.sh`。
-- 在 `tests/` 下新建对应的 `test_*.sh`，引入 `_assert.sh`。
-- `sh tests/run.sh` 会自动发现新测试文件。
+- Add the script under `scripts/` and source `lib/common.sh`.
+- Add a matching `test_*.sh` under `tests/` and source `_assert.sh`.
+- `sh tests/run.sh` auto-discovers new test files.
 
-## 提交规范
+## Commit Style
 
-使用 [Conventional Commits](https://www.conventionalcommits.org/) 格式：
+Use the [Conventional Commits](https://www.conventionalcommits.org/) format:
 
-- `feat:` 新功能
-- `fix:` 修复
-- `docs:` 文档
-- `test:` 测试
-- `chore:` 构建 / 杂项
+- `feat:` new features
+- `fix:` bug fixes
+- `docs:` documentation
+- `test:` tests
+- `chore:` build or miscellaneous maintenance
 
-## 代码风格
+## Code Style
 
-- 缩进：4 空格（参见 `.editorconfig`）。
-- 变量引用加双引号：`"$var"` 而非 `$var`。
-- 函数前写简短注释说明用途。
-- 每个 `lib/*.sh` 用 `__OWRT_*_LOADED` guard 防止重复加载。
+- Indentation: 4 spaces, as defined in `.editorconfig`.
+- Quote variable expansions: use `"$var"` instead of `$var`.
+- Add a short comment before a function when its purpose is not obvious.
+- Protect each `lib/*.sh` with an `__OWRT_*_LOADED` guard to prevent duplicate sourcing.
 
-## 报告问题
+## Reporting Issues
 
-请通过 GitHub Issues 报告，尽量附上：
+Please use GitHub Issues and include as much of the following as possible:
 
-- OpenWrt / ImmortalWrt 版本（`cat /etc/openwrt_release`）
-- 包管理器类型（opkg 或 apk）
-- 完整的错误输出
+- OpenWrt or ImmortalWrt version, for example `cat /etc/openwrt_release`
+- Package manager type, `opkg` or `apk`
+- Full error output

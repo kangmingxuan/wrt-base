@@ -1,5 +1,5 @@
 #!/bin/sh
-# tests/_assert.sh — 极简断言库，被各 test_*.sh 引入。
+# tests/_assert.sh — minimal assertion helpers used by test_*.sh files.
 # shellcheck shell=sh
 
 if [ -n "${__OWRT_ASSERT_LOADED:-}" ]; then
@@ -37,7 +37,7 @@ assert_contains() {
 }
 
 assert_true() {
-    # assert_true CMD [MSG]  — CMD 用 eval 执行
+    # assert_true CMD [MSG] — CMD is executed via eval
     cmd=$1; msg=${2:-$1}
     if eval "$cmd" >/dev/null 2>&1; then
         printf '  ok   %s\n' "$msg"
@@ -59,7 +59,7 @@ assert_false() {
 
 assert_summary() {
     if [ "$ASSERT_FAILS" -gt 0 ]; then
-        printf '  %s 个断言失败\n' "$ASSERT_FAILS" >&2
+        printf '  %s assertions failed\n' "$ASSERT_FAILS" >&2
         exit 1
     fi
 }

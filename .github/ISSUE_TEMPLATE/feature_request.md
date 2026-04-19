@@ -1,19 +1,19 @@
 ---
-name: 功能建议
-about: 提一个新想法
+name: Feature request
+about: Propose an idea for the project
 title: ''
 labels: enhancement
 assignees: ''
 ---
 
-**场景**
-描述你希望解决的问题或使用场景。
+**Use Case**
+Describe the problem or workflow you want to improve.
 
-**方案建议**
-你希望怎么实现？
+**Proposed Solution**
+How would you like this to work?
 
-**备选方案**
-有没有考虑过其他方式？
+**Alternatives Considered**
+Have you considered any other approaches?
 
-**补充信息**
-其他相关上下文。
+**Additional Context**
+Any other relevant context.

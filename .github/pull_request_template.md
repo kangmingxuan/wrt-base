@@ -1,12 +1,12 @@
-## 改动说明
+## Summary
 
-简述本 PR 做了什么。
+Briefly describe what this pull request changes.
 
-## 关联 Issue
+## Related Issue
 
 closes #
 
-## 测试
+## Testing
 
-- [ ] `sh tests/run.sh` 通过
-- [ ] 在 OpenWrt / ImmortalWrt 上实际测试过（如适用）
+- [ ] `sh tests/run.sh` passes
+- [ ] Tested on OpenWrt or ImmortalWrt when applicable
