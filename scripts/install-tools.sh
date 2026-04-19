@@ -9,9 +9,9 @@ set -u
 
 SELF=$(readlink -f "$0" 2>/dev/null) || SELF="$0"
 SCRIPT_DIR=$(CDPATH='' cd -- "$(dirname "$SELF")" && pwd)
-# shellcheck source=lib/common.sh
+# shellcheck disable=SC1091
 . "$SCRIPT_DIR/lib/common.sh"
-# shellcheck source=lib/pkg.sh
+# shellcheck disable=SC1091
 . "$SCRIPT_DIR/lib/pkg.sh"
 
 MODE="full"

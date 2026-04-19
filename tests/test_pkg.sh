@@ -5,11 +5,11 @@ set -u
 TESTS_DIR=$(CDPATH='' cd -- "$(dirname "$0")" && pwd)
 REPO_DIR=$(CDPATH='' cd -- "$TESTS_DIR/.." && pwd)
 
-# shellcheck source=_assert.sh
+# shellcheck disable=SC1091
 . "$TESTS_DIR/_assert.sh"
-# shellcheck source=../scripts/lib/common.sh
+# shellcheck disable=SC1091
 . "$REPO_DIR/scripts/lib/common.sh"
-# shellcheck source=../scripts/lib/pkg.sh
+# shellcheck disable=SC1091
 . "$REPO_DIR/scripts/lib/pkg.sh"
 
 # force opkg

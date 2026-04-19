@@ -8,6 +8,7 @@
 
 # Prevent duplicate sourcing.
 if [ -n "${__OWRT_COMMON_LOADED:-}" ]; then
+    # shellcheck disable=SC2317
     return 0 2>/dev/null || exit 0
 fi
 __OWRT_COMMON_LOADED=1

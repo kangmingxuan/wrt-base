@@ -3,6 +3,7 @@
 # shellcheck shell=sh
 
 if [ -n "${__OWRT_ASSERT_LOADED:-}" ]; then
+    # shellcheck disable=SC2317
     return 0 2>/dev/null || exit 0
 fi
 __OWRT_ASSERT_LOADED=1

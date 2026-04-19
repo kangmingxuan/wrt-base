@@ -13,9 +13,9 @@ set -u
 
 SELF=$(readlink -f "$0" 2>/dev/null) || SELF="$0"
 SCRIPT_DIR=$(CDPATH='' cd -- "$(dirname "$SELF")" && pwd)
-# shellcheck source=lib/common.sh
+# shellcheck disable=SC1091
 . "$SCRIPT_DIR/lib/common.sh"
-# shellcheck source=lib/pkg.sh
+# shellcheck disable=SC1091
 . "$SCRIPT_DIR/lib/pkg.sh"
 
 DISK_THRESHOLD=85   # percentage threshold for warnings
@@ -94,7 +94,10 @@ check_memory() {
     # /proc/meminfo reports values in kB.
     total=$(awk '/^MemTotal:/ {print $2; exit}' /proc/meminfo)
     avail=$(awk '/^MemAvailable:/ {print $2; exit}' /proc/meminfo)
-    [ -n "$total" ] && [ -n "$avail" ] || { fail "unable to read /proc/meminfo"; return; }
+    if [ -z "$total" ] || [ -z "$avail" ]; then
+        fail "unable to read /proc/meminfo"
+        return
+    fi
     used_pct=$(( (total - avail) * 100 / total ))
     if [ "$used_pct" -ge "$MEM_THRESHOLD" ]; then
         fail "memory usage is ${used_pct}% (threshold: ${MEM_THRESHOLD}%)"
