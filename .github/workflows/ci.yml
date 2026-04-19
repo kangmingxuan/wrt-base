@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+permissions:
+  contents: read
+
+jobs:
+  lint-and-test:
+    name: Lint & Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install shellcheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+
+      - name: Syntax check (sh -n)
+        run: find scripts tests -type f -name '*.sh' -exec sh -n {} +
+
+      - name: ShellCheck
+        run: find scripts tests -type f -name '*.sh' -exec shellcheck -x {} +
+
+      - name: Unit tests
+        run: sh tests/run.sh
