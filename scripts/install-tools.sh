@@ -20,6 +20,7 @@ SKIP_UPDATE="false"
 DRY_RUN="false"
 FAILED_PACKAGES=""
 OPTIONAL_PACKAGES="shellcheck"
+TCPDUMP_FULL_MIN_FREE_KB="16384"
 
 # ---- 包集合定义 ------------------------------------------------------------
 
@@ -41,7 +42,6 @@ MINIMAL_PACKAGES="
 bind-dig
 ip-full
 openssl-util
-tcpdump-mini
 "
 
 # 完整运维集合：仅 full 模式安装。
@@ -88,6 +88,8 @@ usage() {
 
 环境变量:
   OWRT_PKG_MANAGER  强制指定 opkg 或 apk（用于测试）
+    OWRT_TCPDUMP_VARIANT  强制指定 tcpdump 变体: auto|full|mini
+    OWRT_STORAGE_FREE_KB  覆盖自动探测到的可用空间（用于测试）
   OWRT_DEBUG=1      打印调试日志
 EOF
 }
@@ -112,8 +114,58 @@ parse_args() {
 selected_packages() {
     tokens "$BASE_PACKAGES"
     tokens "$MINIMAL_PACKAGES"
+    choose_tcpdump_package
     if [ "$MODE" = "full" ]; then
         tokens "$FULL_PACKAGES"
+    fi
+}
+
+get_storage_free_kb() {
+    if [ -n "${OWRT_STORAGE_FREE_KB:-}" ]; then
+        printf '%s\n' "$OWRT_STORAGE_FREE_KB"
+        return 0
+    fi
+
+    storage_path=/overlay
+    [ -d "$storage_path" ] || storage_path=/
+
+    df -Pk "$storage_path" 2>/dev/null | awk 'NR==2 {print $4; exit}'
+}
+
+choose_tcpdump_package() {
+    case "${OWRT_TCPDUMP_VARIANT:-auto}" in
+        full)
+            log_info "按环境变量强制选择完整版 tcpdump"
+            printf '%s\n' tcpdump
+            return 0
+            ;;
+        mini)
+            log_info "按环境变量强制选择精简版 tcpdump-mini"
+            printf '%s\n' tcpdump-mini
+            return 0
+            ;;
+        auto|'')
+            ;;
+        *)
+            die "OWRT_TCPDUMP_VARIANT 仅支持 auto|full|mini"
+            ;;
+    esac
+
+    free_kb=$(get_storage_free_kb)
+    case "$free_kb" in
+        ''|*[!0-9]*)
+            log_warn "无法识别当前可用存储，默认选择 tcpdump-mini"
+            printf '%s\n' tcpdump-mini
+            return 0
+            ;;
+    esac
+
+    if [ "$free_kb" -ge "$TCPDUMP_FULL_MIN_FREE_KB" ]; then
+        log_info "当前可用存储 ${free_kb}KB，选择完整版 tcpdump"
+        printf '%s\n' tcpdump
+    else
+        log_info "当前可用存储 ${free_kb}KB，不足 ${TCPDUMP_FULL_MIN_FREE_KB}KB，选择 tcpdump-mini"
+        printf '%s\n' tcpdump-mini
     fi
 }
 

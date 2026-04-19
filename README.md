@@ -67,10 +67,12 @@ Makefile                  # make help 看可用目标
 | 集合 | 内容 | 适用 |
 | --- | --- | --- |
 | **base**（始终装） | bash, ca-bundle, curl, git, git-http, jq, less, nano, tmux | 维护本仓库与拉远端配置必需 |
-| **minimal**（始终装） | bind-dig, ip-full, openssl-util, tcpdump-mini | 网络/TLS 排障最小集 |
+| **minimal**（始终装） | bind-dig, ip-full, openssl-util, tcpdump 或 tcpdump-mini | 网络/TLS 排障最小集 |
 | **full**（默认追加） | coreutils, diffutils, ethtool, findutils-\*, gawk, grep, htop, iperf3, iputils-\*, lsof, procps-ng-\*, rsync, sed, shellcheck, strace, tar, tree, unzip | 完整运维体验 |
 
 `--minimal` 跳过 full 集合。
+
+抓包工具会自动按可用存储选择：可用空间不少于 16384KB 时装完整版 tcpdump，否则装 tcpdump-mini。也可以用环境变量 `OWRT_TCPDUMP_VARIANT=full|mini|auto` 强制覆盖，`OWRT_STORAGE_FREE_KB` 可用于测试该决策。
 
 ## 健康检查阈值
 

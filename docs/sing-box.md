@@ -15,7 +15,7 @@
 ## 推荐项
 
 - 装 `htop`、`lsof`、`strace`：故障排查时少装的 30 秒比异常多撑 30 分钟更值。
-- 装 `tcpdump-mini`：抓出口流量诊断 TLS 异常。
+- 装 `tcpdump` 或 `tcpdump-mini`：抓出口流量诊断 TLS 异常；脚本会按可用存储自动选择，空间足够时优先完整版 tcpdump。
 - 装 `tmux`：长任务（如规则集预热）放在 detach session 里，避免 SSH 掉线就死。
 
 `sh scripts/install-tools.sh` (默认 full) 覆盖这些。
