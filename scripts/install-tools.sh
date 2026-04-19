@@ -19,7 +19,6 @@ PRINT_ONLY="false"
 SKIP_UPDATE="false"
 DRY_RUN="false"
 FAILED_PACKAGES=""
-OPTIONAL_PACKAGES="shellcheck"
 TCPDUMP_FULL_MIN_FREE_KB="16384"
 
 # ---- Package set definitions ----------------------------------------------
@@ -70,7 +69,6 @@ python3-light
 ripgrep
 rsync
 sed
-shellcheck
 strace
 tar
 tree
@@ -176,14 +174,6 @@ choose_tcpdump_package() {
     fi
 }
 
-is_optional_package() {
-    package_name=$1
-    case " $OPTIONAL_PACKAGES " in
-        *" $package_name "*) return 0 ;;
-        *) return 1 ;;
-    esac
-}
-
 should_skip_package() {
     package_name=$1
 
@@ -220,10 +210,6 @@ install_all_collect() {
             continue
         fi
         if ! pkg_is_available "$pkg"; then
-            if is_optional_package "$pkg"; then
-                log_warn "optional package is unavailable in the current feed; skipped: $pkg"
-                continue
-            fi
             printf '%s\n' "$pkg" >>"$tmp"
             log_warn "package is unavailable in the current feed: $pkg"
             continue

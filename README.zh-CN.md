@@ -64,13 +64,13 @@ README.zh-CN.md           # 简体中文 README
 | --- | --- | --- |
 | **base**（始终安装） | bash, ca-bundle, curl, git, git-http, jq, less, nano, tmux | 维护本仓库和拉取远端配置所必需 |
 | **minimal**（始终安装） | bind-dig, ip-full, openssl-util, tcpdump 或 tcpdump-mini | 网络与 TLS 排障所需的最小集合 |
-| **full**（默认追加） | coreutils, diffutils, ethtool, findutils-\*, gawk, grep, gzip, htop, iperf3, iputils-\*, libstdcpp6, lsof, openssh-client, openssh-server, openssh-sftp-server, procps-ng-\*, python3-light, ripgrep, rsync, sed, shellcheck, strace, tar, tree, unzip | 更完整的维护体验，也更适合作为 VS Code Remote-SSH 和 code-server 的基础环境 |
+| **full**（默认追加） | coreutils, diffutils, ethtool, findutils-\*, gawk, grep, gzip, htop, iperf3, iputils-\*, libstdcpp6, lsof, openssh-client, openssh-server, openssh-sftp-server, procps-ng-\*, python3-light, ripgrep, rsync, sed, strace, tar, tree, unzip | 更完整的维护体验，也更适合作为 VS Code Remote-SSH 和 code-server 的基础环境 |
 
 `--minimal` 会跳过 full 集合。
 
 ## 空间占用
 
-在当前 x86_64 软件源下，`--minimal` 大约需要 10.8 MiB，`--full` 大约需要 18.8 MiB，已包含自动选择的 `tcpdump` 包，但不包含文件系统和 overlay 的额外开销。实际占用会因目标架构、软件源和可选包（例如 `shellcheck`）是否可用而变化。
+在当前 x86_64 软件源下，`--minimal` 大约需要 10.8 MiB，`--full` 大约需要 18.8 MiB，已包含自动选择的 `tcpdump` 包，但不包含文件系统和 overlay 的额外开销。实际占用会因目标架构、软件源和包可用性而变化。
 
 抓包工具会根据可用存储自动选择：当可用空间不少于 16384 KB 时安装完整版 `tcpdump`，否则安装 `tcpdump-mini`。也可以通过 `OWRT_TCPDUMP_VARIANT=full|mini|auto` 强制覆盖，`OWRT_STORAGE_FREE_KB` 可用于测试这段决策逻辑。
 

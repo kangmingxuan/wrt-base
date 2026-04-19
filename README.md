@@ -64,13 +64,13 @@ All commands run directly with `sh` and do not depend on make. If your workstati
 | --- | --- | --- |
 | **base** (always installed) | bash, ca-bundle, curl, git, git-http, jq, less, nano, tmux | Required to maintain this repository and pull remote configuration |
 | **minimal** (always installed) | bind-dig, ip-full, openssl-util, tcpdump or tcpdump-mini | Minimum set for network and TLS troubleshooting |
-| **full** (added by default) | coreutils, diffutils, ethtool, findutils-\*, gawk, grep, gzip, htop, iperf3, iputils-\*, libstdcpp6, lsof, openssh-client, openssh-server, openssh-sftp-server, procps-ng-\*, python3-light, ripgrep, rsync, sed, shellcheck, strace, tar, tree, unzip | Full maintenance experience, including a better baseline for VS Code Remote-SSH and code-server workflows |
+| **full** (added by default) | coreutils, diffutils, ethtool, findutils-\*, gawk, grep, gzip, htop, iperf3, iputils-\*, libstdcpp6, lsof, openssh-client, openssh-server, openssh-sftp-server, procps-ng-\*, python3-light, ripgrep, rsync, sed, strace, tar, tree, unzip | Full maintenance experience, including a better baseline for VS Code Remote-SSH and code-server workflows |
 
 `--minimal` skips the full set.
 
 ## Space Usage
 
-On the current x86_64 feed, `--minimal` installs about 10.8 MiB and `--full` installs about 18.8 MiB, including the auto-selected `tcpdump` package and excluding filesystem/overlay overhead. Actual usage varies by target, feed, and whether optional packages such as `shellcheck` are available.
+On the current x86_64 feed, `--minimal` installs about 10.8 MiB and `--full` installs about 18.8 MiB, including the auto-selected `tcpdump` package and excluding filesystem/overlay overhead. Actual usage varies by target, feed, and package availability.
 
 Packet capture is selected automatically based on free storage: if at least 16384 KB is available, the script installs the full `tcpdump`; otherwise it installs `tcpdump-mini`. You can override the decision with `OWRT_TCPDUMP_VARIANT=full|mini|auto`, and `OWRT_STORAGE_FREE_KB` is available for testing that logic.
 
