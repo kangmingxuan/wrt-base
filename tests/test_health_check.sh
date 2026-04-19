@@ -13,8 +13,9 @@ SCRIPT="$REPO_DIR/scripts/health-check.sh"
 
 assert_true "sh \"$SCRIPT\" --help" "--help succeeds"
 
-# Relax thresholds and skip environment-dependent checks; this should pass
-assert_true "sh \"$SCRIPT\" --skip-time --skip-net --disk 100 --mem 100 --load 1000 --quiet" \
+# Relax thresholds and skip environment-dependent checks; force a supported
+# package backend so the smoke test stays portable across CI hosts.
+assert_true "OWRT_PKG_MANAGER=opkg sh \"$SCRIPT\" --skip-time --skip-net --disk 100 --mem 100 --load 1000 --quiet" \
     "relaxed thresholds with skip-net should pass"
 
 assert_summary
