@@ -39,7 +39,7 @@
    #!/bin/sh
    set -u
    SELF=$(readlink -f "$0" 2>/dev/null) || SELF="$0"
-   SCRIPT_DIR=$(CDPATH= cd -- "$(dirname "$SELF")" && pwd)
+   SCRIPT_DIR=$(CDPATH='' cd -- "$(dirname "$SELF")" && pwd)
    . "$SCRIPT_DIR/lib/common.sh"
    ```
 

@@ -4,8 +4,8 @@
 # 我们只检查 --help 和无害选项。
 
 set -u
-TESTS_DIR=$(CDPATH= cd -- "$(dirname "$0")" && pwd)
-REPO_DIR=$(CDPATH= cd -- "$TESTS_DIR/.." && pwd)
+TESTS_DIR=$(CDPATH='' cd -- "$(dirname "$0")" && pwd)
+REPO_DIR=$(CDPATH='' cd -- "$TESTS_DIR/.." && pwd)
 SCRIPT="$REPO_DIR/scripts/health-check.sh"
 
 # shellcheck source=_assert.sh

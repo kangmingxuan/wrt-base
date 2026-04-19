@@ -2,8 +2,8 @@
 # tests/test_install_tools.sh — install-tools.sh 的烟雾测试。
 
 set -u
-TESTS_DIR=$(CDPATH= cd -- "$(dirname "$0")" && pwd)
-REPO_DIR=$(CDPATH= cd -- "$TESTS_DIR/.." && pwd)
+TESTS_DIR=$(CDPATH='' cd -- "$(dirname "$0")" && pwd)
+REPO_DIR=$(CDPATH='' cd -- "$TESTS_DIR/.." && pwd)
 SCRIPT="$REPO_DIR/scripts/install-tools.sh"
 
 # shellcheck source=_assert.sh

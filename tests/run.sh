@@ -11,8 +11,8 @@
 set -u
 
 SELF=$(readlink -f "$0" 2>/dev/null) || SELF="$0"
-TESTS_DIR=$(CDPATH= cd -- "$(dirname "$SELF")" && pwd)
-REPO_DIR=$(CDPATH= cd -- "$TESTS_DIR/.." && pwd)
+TESTS_DIR=$(CDPATH='' cd -- "$(dirname "$SELF")" && pwd)
+REPO_DIR=$(CDPATH='' cd -- "$TESTS_DIR/.." && pwd)
 export REPO_DIR TESTS_DIR
 
 # shellcheck source=../scripts/lib/common.sh

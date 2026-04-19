@@ -2,8 +2,8 @@
 # tests/test_common.sh — common.sh 的基本测试。
 
 set -u
-TESTS_DIR=$(CDPATH= cd -- "$(dirname "$0")" && pwd)
-REPO_DIR=$(CDPATH= cd -- "$TESTS_DIR/.." && pwd)
+TESTS_DIR=$(CDPATH='' cd -- "$(dirname "$0")" && pwd)
+REPO_DIR=$(CDPATH='' cd -- "$TESTS_DIR/.." && pwd)
 
 # shellcheck source=_assert.sh
 . "$TESTS_DIR/_assert.sh"
