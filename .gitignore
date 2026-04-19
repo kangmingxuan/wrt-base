@@ -1,0 +1,12 @@
+# OS / 编辑器
+.DS_Store
+*.swp
+*~
+
+# 临时输出
+/tmp-*
+*.log
+
+# 本地敏感配置（不应进仓库）
+local.env
+*.local.sh

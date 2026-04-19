@@ -1,0 +1,3 @@
+# 仅与 POSIX sh 相关的禁用项放在这里。
+# 单条说明放在源文件里 inline disable，避免全局静默掉真问题。
+disable=SC2039
