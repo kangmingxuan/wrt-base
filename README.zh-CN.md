@@ -12,6 +12,7 @@ wrt-base 是 ImmortalWrt / OpenWrt 路由器的维护基线。它把安装工具
 - **健康检查脚本**：一次性检查时间、磁盘、内存、负载、出网、DNS 和包管理器可用性，输出也适合挂到 cron。
 - **POSIX sh 实现**：在 BusyBox ash 上原生运行，不依赖 bash 或 make。
 - **自带测试**：`sh tests/run.sh` 会运行语法检查、shellcheck（如果已安装）和单元测试。
+- **VS Code Remote-SSH 基线**：包含 OpenSSH client/server、SFTP server、tar、gzip 和相关运行时依赖，方便 VS Code 的 Remote-SSH 插件在 OpenWrt 上安装并启动服务端。
 - **单包失败不中断整体安装**：网络抖动或当前软件源缺包时，安装会继续执行，并在最后汇总告警。
 
 ## 快速开始
@@ -66,6 +67,10 @@ README.zh-CN.md           # 简体中文 README
 | **full**（默认追加） | coreutils, diffutils, ethtool, findutils-\*, gawk, grep, gzip, htop, iperf3, iputils-\*, libstdcpp6, lsof, openssh-client, openssh-server, openssh-sftp-server, procps-ng-\*, python3-light, ripgrep, rsync, sed, shellcheck, strace, tar, tree, unzip | 更完整的维护体验，也更适合作为 VS Code Remote-SSH 和 code-server 的基础环境 |
 
 `--minimal` 会跳过 full 集合。
+
+## 空间占用
+
+在当前 x86_64 软件源下，`--minimal` 大约需要 10.8 MiB，`--full` 大约需要 18.8 MiB，已包含自动选择的 `tcpdump` 包，但不包含文件系统和 overlay 的额外开销。实际占用会因目标架构、软件源和可选包（例如 `shellcheck`）是否可用而变化。
 
 抓包工具会根据可用存储自动选择：当可用空间不少于 16384 KB 时安装完整版 `tcpdump`，否则安装 `tcpdump-mini`。也可以通过 `OWRT_TCPDUMP_VARIANT=full|mini|auto` 强制覆盖，`OWRT_STORAGE_FREE_KB` 可用于测试这段决策逻辑。
 

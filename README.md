@@ -12,6 +12,7 @@ wrt-base is a maintenance baseline for ImmortalWrt and OpenWrt routers. It turns
 - **Health check script**: Checks time, disk, memory, load, outbound connectivity, DNS, and package manager availability in one pass, with cron-friendly output.
 - **POSIX sh implementation**: Runs natively on BusyBox ash with no bash or make dependency.
 - **Built-in tests**: `sh tests/run.sh` runs syntax checks, shellcheck when available, and unit tests.
+- **VS Code Remote-SSH baseline**: Includes the OpenSSH client/server, SFTP server, tar, gzip, and related runtime packages needed for the VS Code Remote-SSH extension to install its server on OpenWrt.
 - **Single-package failures do not abort the run**: If the network is unstable or a package is unavailable in the current feed, installation continues and summarizes warnings at the end.
 
 ## Quick Start
@@ -66,6 +67,10 @@ All commands run directly with `sh` and do not depend on make. If your workstati
 | **full** (added by default) | coreutils, diffutils, ethtool, findutils-\*, gawk, grep, gzip, htop, iperf3, iputils-\*, libstdcpp6, lsof, openssh-client, openssh-server, openssh-sftp-server, procps-ng-\*, python3-light, ripgrep, rsync, sed, shellcheck, strace, tar, tree, unzip | Full maintenance experience, including a better baseline for VS Code Remote-SSH and code-server workflows |
 
 `--minimal` skips the full set.
+
+## Space Usage
+
+On the current x86_64 feed, `--minimal` installs about 10.8 MiB and `--full` installs about 18.8 MiB, including the auto-selected `tcpdump` package and excluding filesystem/overlay overhead. Actual usage varies by target, feed, and whether optional packages such as `shellcheck` are available.
 
 Packet capture is selected automatically based on free storage: if at least 16384 KB is available, the script installs the full `tcpdump`; otherwise it installs `tcpdump-mini`. You can override the decision with `OWRT_TCPDUMP_VARIANT=full|mini|auto`, and `OWRT_STORAGE_FREE_KB` is available for testing that logic.
 
