@@ -19,6 +19,7 @@ PRINT_ONLY="false"
 SKIP_UPDATE="false"
 DRY_RUN="false"
 FAILED_PACKAGES=""
+OPTIONAL_PACKAGES="shellcheck"
 
 # ---- 包集合定义 ------------------------------------------------------------
 
@@ -116,6 +117,35 @@ selected_packages() {
     fi
 }
 
+is_optional_package() {
+    package_name=$1
+    case " $OPTIONAL_PACKAGES " in
+        *" $package_name "*) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+should_skip_package() {
+    package_name=$1
+
+    case "$package_name" in
+        tcpdump-mini)
+            if pkg_is_installed tcpdump; then
+                log_info "已安装完整版 tcpdump，跳过冲突包: tcpdump-mini"
+                return 0
+            fi
+            ;;
+        tcpdump)
+            if pkg_is_installed tcpdump-mini; then
+                log_info "已安装 tcpdump-mini，跳过冲突包: tcpdump"
+                return 0
+            fi
+            ;;
+    esac
+
+    return 1
+}
+
 # 注意：管道右侧在 POSIX sh 里运行在子 shell，
 # 所以失败列表先写入临时文件，主 shell 再读回 FAILED_PACKAGES。
 install_all_collect() {
@@ -123,8 +153,20 @@ install_all_collect() {
     : > "$tmp"
     selected_packages | while IFS= read -r pkg; do
         [ -n "$pkg" ] || continue
+        if should_skip_package "$pkg"; then
+            continue
+        fi
         if pkg_is_installed "$pkg"; then
             log_info "已安装，跳过: $pkg"
+            continue
+        fi
+        if ! pkg_is_available "$pkg"; then
+            if is_optional_package "$pkg"; then
+                log_warn "当前软件源未提供可选包，已跳过: $pkg"
+                continue
+            fi
+            printf '%s\n' "$pkg" >>"$tmp"
+            log_warn "当前软件源未提供该包: $pkg"
             continue
         fi
         if [ "$DRY_RUN" = "true" ]; then

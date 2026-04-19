@@ -8,6 +8,7 @@
 # 提供:
 #   pkg_detect              填充 PKG_MANAGER (opkg|apk)
 #   pkg_update              刷新软件源元数据
+#   pkg_is_available NAME   检查软件源是否提供该包
 #   pkg_is_installed NAME   检查包是否已安装
 #   pkg_install NAME        安装单个包
 
@@ -39,6 +40,15 @@ pkg_update() {
         opkg) opkg update ;;
         apk)  apk update ;;
         *)    return 1 ;;
+    esac
+}
+
+pkg_is_available() {
+    name=$1
+    case "$PKG_MANAGER" in
+        opkg) opkg list "$name" 2>/dev/null | grep -q "^$name - " ;;
+        apk)  apk search --exact "$name" 2>/dev/null | grep -q "^$name$" ;;
+        *)    return 2 ;;
     esac
 }
 

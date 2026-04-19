@@ -30,6 +30,13 @@ assert_contains "$out_min" "curl" "minimal 仍含 curl"
 out_full=$(sh "$SCRIPT" --full --print-only)
 assert_contains "$out_full" "htop" "full 包含 htop"
 
+# 当前环境若已装 tcpdump，dry-run 不应再尝试装 tcpdump-mini
+if opkg list-installed tcpdump >/dev/null 2>&1; then
+    dry_run=$(sh "$SCRIPT" --dry-run --skip-update 2>&1)
+    assert_contains "$dry_run" "已安装完整版 tcpdump，跳过冲突包: tcpdump-mini" \
+        "dry-run 跳过与 tcpdump 冲突的 tcpdump-mini"
+fi
+
 # 未知选项应退非 0
 assert_false "sh \"$SCRIPT\" --bogus" "未知选项失败退出"
 
