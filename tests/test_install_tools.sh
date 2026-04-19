@@ -48,6 +48,13 @@ assert_contains "$forced_full" "tcpdump" "environment can force tcpdump"
 # full mode should include htop
 out_full=$(sh "$SCRIPT" --full --print-only)
 assert_contains "$out_full" "htop" "full includes htop"
+assert_contains "$out_full" "gzip" "full includes gzip"
+assert_contains "$out_full" "libstdcpp6" "full includes libstdcpp6"
+assert_contains "$out_full" "openssh-client" "full includes openssh-client"
+assert_contains "$out_full" "openssh-server" "full includes openssh-server"
+assert_contains "$out_full" "openssh-sftp-server" "full includes openssh-sftp-server"
+assert_contains "$out_full" "python3-light" "full includes python3-light"
+assert_contains "$out_full" "ripgrep" "full includes ripgrep"
 
 # if tcpdump is already installed, forcing mini should skip the conflicting package
 if opkg list-installed tcpdump >/dev/null 2>&1; then
