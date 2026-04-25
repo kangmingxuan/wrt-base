@@ -48,6 +48,7 @@ assert_contains "$forced_full" "tcpdump" "environment can force tcpdump"
 # full mode should include htop
 out_full=$(sh "$SCRIPT" --full --print-only)
 assert_contains "$out_full" "htop" "full includes htop"
+assert_contains "$out_full" "coreutils-install" "full includes coreutils-install for install(1)"
 assert_contains "$out_full" "gzip" "full includes gzip"
 assert_contains "$out_full" "libstdcpp6" "full includes libstdcpp6"
 assert_contains "$out_full" "openssh-client" "full includes openssh-client"

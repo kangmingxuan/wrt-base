@@ -64,9 +64,11 @@ README.zh-CN.md           # 简体中文 README
 | --- | --- | --- |
 | **base**（始终安装） | bash, ca-bundle, curl, git, git-http, jq, less, nano, tmux | 维护本仓库和拉取远端配置所必需 |
 | **minimal**（始终安装） | bind-dig, ip-full, openssl-util, tcpdump 或 tcpdump-mini | 网络与 TLS 排障所需的最小集合 |
-| **full**（默认追加） | coreutils, diffutils, ethtool, findutils-\*, gawk, grep, gzip, htop, iperf3, iputils-\*, libstdcpp6, lsof, openssh-client, openssh-server, openssh-sftp-server, procps-ng-\*, python3-light, ripgrep, rsync, sed, strace, tar, tree, unzip | 更完整的维护体验，也更适合作为 VS Code Remote-SSH 和 code-server 的基础环境 |
+| **full**（默认追加） | coreutils, coreutils-install, diffutils, ethtool, findutils-\*, gawk, grep, gzip, htop, iperf3, iputils-\*, libstdcpp6, lsof, openssh-client, openssh-server, openssh-sftp-server, procps-ng-\*, python3-light, ripgrep, rsync, sed, strace, tar, tree, unzip | 更完整的维护体验，也更适合作为 VS Code Remote-SSH 和 code-server 的基础环境 |
 
 `--minimal` 会跳过 full 集合。
+
+`install` 命令现在通过 `coreutils-install` 明确安装。OpenWrt 和 ImmortalWrt 的软件包里，GNU `install` 是拆分出来的独立包，不能指望 `coreutils` 元包默认把它带上，因此这里显式补齐。
 
 ## 空间占用
 

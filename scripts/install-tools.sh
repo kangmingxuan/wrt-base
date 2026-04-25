@@ -46,6 +46,7 @@ openssl-util
 # Full maintenance set: installed only in full mode.
 FULL_PACKAGES="
 coreutils
+coreutils-install
 diffutils
 ethtool
 findutils-find
