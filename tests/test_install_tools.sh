@@ -85,6 +85,10 @@ case "$out_nocfg" in
     *mytool*) ASSERT_FAILS=$((ASSERT_FAILS + 1)); printf '  FAIL --no-config should ignore the config file\n' >&2 ;;
     *)        printf '  ok   --no-config ignores the config file\n' ;;
 esac
+
+# an explicit --config takes precedence over --no-config
+out_both=$(sh "$SCRIPT" --print-only --config "$cfg" --no-config)
+assert_contains "$out_both" "mytool" "explicit --config wins over --no-config"
 rm -f "$cfg"
 
 assert_false "sh \"$SCRIPT\" --config" "--config without a value is rejected"

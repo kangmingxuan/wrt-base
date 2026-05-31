@@ -91,7 +91,7 @@ Options:
     --minimal       Install only the baseline and minimum troubleshooting set
     --full          Install the full set (default)
     --config FILE   Add extra packages listed in FILE (one per line, # comments)
-    --no-config     Ignore the default config file even if it exists
+    --no-config     Ignore the default config file (does not affect --config)
     --print-only    Print the package list without installing anything
     --dry-run       Detect the package manager and print actions without installing
     --skip-update   Skip package feed update
@@ -158,12 +158,13 @@ selected_packages() {
 }
 
 # Resolve the active config file path, or print nothing when none applies.
+# An explicit --config always wins; --no-config only suppresses the default.
 resolve_config() {
-    [ "$NO_CONFIG" = "true" ] && return 0
     if [ -n "$CONFIG_FILE" ]; then
         [ -r "$CONFIG_FILE" ] && printf '%s\n' "$CONFIG_FILE"
         return 0
     fi
+    [ "$NO_CONFIG" = "true" ] && return 0
     [ -r "$DEFAULT_CONFIG" ] && printf '%s\n' "$DEFAULT_CONFIG"
     return 0
 }
@@ -284,7 +285,8 @@ install_all_collect() {
 main() {
     parse_args "$@"
 
-    if [ "$NO_CONFIG" != "true" ] && [ -n "$CONFIG_FILE" ] && [ ! -r "$CONFIG_FILE" ]; then
+    # An explicit --config is always validated, even alongside --no-config.
+    if [ -n "$CONFIG_FILE" ] && [ ! -r "$CONFIG_FILE" ]; then
         die "config file not readable: $CONFIG_FILE"
     fi
 
