@@ -219,10 +219,12 @@ check_network() {
     fi
 }
 
-# Report whether the device has at least one global-scope IPv6 address.
+# Report whether the device has at least one global unicast IPv6 address
+# (2000::/3). Unique local addresses (fc00::/7) carry "scope global" too but are
+# not publicly routable, so they are deliberately excluded.
 has_global_ipv6() {
     has_cmd ip || return 1
-    ip -6 addr show scope global 2>/dev/null | grep -q 'inet6'
+    ip -6 addr show scope global 2>/dev/null | grep -qiE 'inet6 [23][0-9a-f]*:'
 }
 
 check_ipv6() {

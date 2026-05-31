@@ -69,10 +69,13 @@ assert_false "sh \"$SCRIPT\" --bogus" "unknown option exits non-zero"
 
 # config file adds extra packages on top of the selected mode
 cfg=$(mktemp 2>/dev/null || printf '/tmp/wrt-install-cfg.%s' "$$")
-printf '# a comment\nmytool\n\nzzz-extra\n' >"$cfg"
+printf '# a comment\nmytool\n\nzzz-extra\n  indented-tool  # inline comment\n' >"$cfg"
 out_cfg=$(OWRT_INSTALL_CONFIG="$cfg" sh "$SCRIPT" --print-only)
 assert_contains "$out_cfg" "mytool" "default config file adds mytool"
 assert_contains "$out_cfg" "zzz-extra" "default config file adds zzz-extra"
+# indented entries with inline comments are trimmed to the package token only
+assert_contains "$(OWRT_INSTALL_CONFIG="$cfg" sh "$SCRIPT" --print-only | grep -c '^indented-tool$')" "1" \
+    "inline comment and indentation are stripped"
 
 out_explicit=$(sh "$SCRIPT" --print-only --config "$cfg")
 assert_contains "$out_explicit" "mytool" "--config adds mytool"

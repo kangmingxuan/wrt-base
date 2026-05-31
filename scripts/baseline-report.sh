@@ -178,7 +178,7 @@ gather() {
     add wan_ip4 "Egress IPv4" "${ip4:-none}"
     ip6=$(route_src -6 2606:4700:4700::1111)
     add wan_ip6 "Egress IPv6" "${ip6:-none}"
-    if has_cmd ip && ip -6 addr show scope global 2>/dev/null | grep -q 'inet6'; then
+    if has_cmd ip && ip -6 addr show scope global 2>/dev/null | grep -qiE 'inet6 [23][0-9a-f]*:'; then
         add ipv6_global "Global IPv6" "yes"
     else
         add ipv6_global "Global IPv6" "no"

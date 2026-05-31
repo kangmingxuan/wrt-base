@@ -168,11 +168,13 @@ resolve_config() {
     return 0
 }
 
-# Emit extra packages declared in the config file, stripping comments/blanks.
+# Emit extra packages declared in the config file. Each line may use leading
+# indentation and a trailing '#' comment; only the first whitespace-delimited
+# token on a non-empty line is treated as a package name.
 extra_packages() {
     cfg=$(resolve_config)
     [ -n "$cfg" ] || return 0
-    sed -e 's/#.*//' "$cfg" 2>/dev/null | awk 'NF'
+    awk '{ sub(/#.*/, ""); if ($1 != "") print $1 }' "$cfg" 2>/dev/null
 }
 
 get_storage_free_kb() {
