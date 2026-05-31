@@ -36,4 +36,42 @@ rm -f "$tmp"
 assert_false "sh \"$SCRIPT\" --output" "--output without a value is rejected"
 assert_false "sh \"$SCRIPT\" --bogus" "unknown option exits non-zero"
 
+# Egress IPv6 selection: stub `ip` in PATH so the test is independent of the
+# host network. The route egresses with a ULA source on a dev that also carries
+# a GUA, so the report should prefer the GUA on that interface.
+ip_stub_dir=$(mktemp -d 2>/dev/null || printf '/tmp/wrt-ipstub.%s' "$$")
+mkdir -p "$ip_stub_dir"
+cat >"$ip_stub_dir/ip" <<'STUB'
+#!/bin/sh
+case "$*" in
+    "-6 route get"*)
+        echo "2606:4700:4700::1111 from :: via fe80::1 dev wan6 src fdfe:dcba:9876::1 metric 1024 pref medium" ;;
+    "-6 addr show dev wan6 scope global")
+        echo "    inet6 2001:db8:abcd:1::2/64 scope global dynamic" ;;
+    "-6 addr show scope global")
+        echo "    inet6 2001:db8:abcd:1::2/64 scope global dynamic" ;;
+    "-4 route get"*)
+        echo "1.1.1.1 dev wan src 192.0.2.10 uid 0" ;;
+esac
+STUB
+chmod +x "$ip_stub_dir/ip"
+out6=$(PATH="$ip_stub_dir:$PATH" OWRT_PKG_MANAGER=opkg sh "$SCRIPT")
+assert_contains "$out6" "2001:db8:abcd:1::2" "egress IPv6 prefers a GUA on the route's dev"
+
+# When the route probe yields no source there is no usable IPv6 egress route,
+# so the report must not borrow an address from an unrelated interface.
+cat >"$ip_stub_dir/ip" <<'STUB'
+#!/bin/sh
+case "$*" in
+    "-4 route get"*) echo "1.1.1.1 dev wan src 192.0.2.10 uid 0" ;;
+esac
+STUB
+chmod +x "$ip_stub_dir/ip"
+out_none=$(PATH="$ip_stub_dir:$PATH" OWRT_PKG_MANAGER=opkg sh "$SCRIPT")
+case "$out_none" in
+    *"Egress IPv6"*none*) printf '  ok   no IPv6 route reports egress IPv6 as none\n' ;;
+    *) ASSERT_FAILS=$((ASSERT_FAILS + 1)); printf '  FAIL no IPv6 route should report egress IPv6 as none\n' >&2 ;;
+esac
+rm -rf "$ip_stub_dir"
+
 assert_summary
