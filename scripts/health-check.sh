@@ -24,8 +24,11 @@ LOAD_FACTOR=2       # warn when 1-minute load / CPU count exceeds this factor
 SKIP_TIME="false"
 SKIP_NET="false"
 QUIET="false"
+JSON="false"
 
 EXIT_CODE=0
+TAB=$(printf '\t')
+RESULT_TMP=""
 
 usage() {
     cat <<'EOF'
@@ -35,9 +38,10 @@ Options:
     --disk N      Disk usage warning threshold in percent (default: 85)
     --mem N       Memory usage warning threshold in percent (default: 90)
     --load N      Warning factor for 1-minute load / CPU count (default: 2)
-    --skip-time   Skip the system time sanity check
-    --skip-net    Skip outbound HTTPS and DNS checks
+    --skip-time   Skip the system time and NTP checks
+    --skip-net    Skip outbound HTTPS, DNS, and IPv6 checks
     --quiet       Print only failing checks
+    --json        Print results as a JSON document on stdout
     -h, --help    Show this help message
 EOF
 }
@@ -45,12 +49,13 @@ EOF
 parse_args() {
     while [ $# -gt 0 ]; do
         case "$1" in
-            --disk) DISK_THRESHOLD="$2"; shift ;;
-            --mem)  MEM_THRESHOLD="$2"; shift ;;
-            --load) LOAD_FACTOR="$2"; shift ;;
+            --disk) DISK_THRESHOLD=$(need_value "$@") || exit 1; shift ;;
+            --mem)  MEM_THRESHOLD=$(need_value "$@") || exit 1; shift ;;
+            --load) LOAD_FACTOR=$(need_value "$@") || exit 1; shift ;;
             --skip-time) SKIP_TIME="true" ;;
             --skip-net) SKIP_NET="true" ;;
             --quiet) QUIET="true" ;;
+            --json) JSON="true" ;;
             -h|--help) usage; exit 0 ;;
             *) die "unknown option: $1" ;;
         esac
@@ -58,17 +63,84 @@ parse_args() {
     done
 }
 
-ok()   { [ "$QUIET" = "true" ] || log_info "$*"; }
-fail() { log_warn "$*"; EXIT_CODE=1; }
+# Echo the operand for an option, rejecting a missing value or another option.
+# Usage: VAR=$(need_value "$@") || exit 1   inside the option's case branch.
+need_value() {
+    if [ "$#" -lt 2 ]; then
+        log_error "$1 requires a value"
+        return 1
+    fi
+    case "$2" in
+        -*)
+            log_error "$1 requires a value, but got option: $2"
+            return 1
+            ;;
+    esac
+    printf '%s\n' "$2"
+}
+
+# Escape a string for inclusion in a JSON double-quoted value.
+json_escape() {
+    printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g'
+}
+
+# Record a single check result. In JSON mode results are buffered and rendered
+# at the end; otherwise they are logged immediately.
+record() {
+    rstatus=$1; rname=$2; rmsg=$3
+    [ "$rstatus" = "fail" ] && EXIT_CODE=1
+    if [ "$JSON" = "true" ]; then
+        printf '%s%s%s%s%s\n' "$rstatus" "$TAB" "$rname" "$TAB" "$rmsg" >>"$RESULT_TMP"
+        return
+    fi
+    case "$rstatus" in
+        pass) [ "$QUIET" = "true" ] || log_info "$rmsg" ;;
+        fail) log_warn "$rmsg" ;;
+    esac
+}
+
+ok()   { record pass "$1" "$2"; }
+fail() { record fail "$1" "$2"; }
 
 check_time() {
     [ "$SKIP_TIME" = "true" ] && return
     # Before NTP sync, the year is often 1970 or 2000.
     year=$(date +%Y)
     if [ "$year" -lt 2024 ]; then
-        fail "system time looks incorrect: $(date)"
+        fail time "system time looks incorrect: $(date)"
     else
-        ok "system time: $(date)"
+        ok time "system time: $(date)"
+    fi
+}
+
+# Report whether an NTP client appears to be running. Prefer pgrep when
+# available; fall back to scanning ps output (busybox lists all processes,
+# while procps-ng ps is terminal-scoped, so this is only a best-effort probe).
+ntpd_running() {
+    if has_cmd pgrep; then
+        pgrep ntpd >/dev/null 2>&1
+        return
+    fi
+    # shellcheck disable=SC2009
+    ps 2>/dev/null | grep -q '[n]tpd'
+}
+
+check_ntp() {
+    [ "$SKIP_TIME" = "true" ] && return
+    # On OpenWrt/ImmortalWrt, procd's init script is the authoritative source;
+    # process scanning is unreliable when procps-ng ps replaces busybox ps.
+    if [ -x /etc/init.d/sysntpd ]; then
+        if /etc/init.d/sysntpd status 2>/dev/null | grep -qi 'running'; then
+            ok ntp "NTP client (sysntpd) is running"
+        else
+            fail ntp "sysntpd is installed but not running"
+        fi
+        return
+    fi
+    if ntpd_running; then
+        ok ntp "NTP client (ntpd) is running"
+    else
+        fail ntp "no running NTP client detected"
     fi
 }
 
@@ -86,9 +158,9 @@ check_disk() {
             ''|*[!0-9]*) continue ;;
         esac
         if [ "$pct" -ge "$DISK_THRESHOLD" ]; then
-            fail "disk usage on $mount is ${pct}% (threshold: ${DISK_THRESHOLD}%)"
+            fail "disk:$mount" "disk usage on $mount is ${pct}% (threshold: ${DISK_THRESHOLD}%)"
         else
-            ok "disk usage on $mount is ${pct}%"
+            ok "disk:$mount" "disk usage on $mount is ${pct}%"
         fi
     done <"$tmp"
     rm -f "$tmp"
@@ -99,14 +171,14 @@ check_memory() {
     total=$(awk '/^MemTotal:/ {print $2; exit}' /proc/meminfo)
     avail=$(awk '/^MemAvailable:/ {print $2; exit}' /proc/meminfo)
     if [ -z "$total" ] || [ -z "$avail" ]; then
-        fail "unable to read /proc/meminfo"
+        fail mem "unable to read /proc/meminfo"
         return
     fi
     used_pct=$(( (total - avail) * 100 / total ))
     if [ "$used_pct" -ge "$MEM_THRESHOLD" ]; then
-        fail "memory usage is ${used_pct}% (threshold: ${MEM_THRESHOLD}%)"
+        fail mem "memory usage is ${used_pct}% (threshold: ${MEM_THRESHOLD}%)"
     else
-        ok "memory usage is ${used_pct}%"
+        ok mem "memory usage is ${used_pct}%"
     fi
 }
 
@@ -118,9 +190,9 @@ check_load() {
     load1_x100=$(printf '%s' "$load1" | awk '{printf "%d", $1*100}')
     threshold_x100=$(( cpus * LOAD_FACTOR * 100 ))
     if [ "$load1_x100" -gt "$threshold_x100" ]; then
-        fail "1-minute load is ${load1} (CPUs=${cpus}, factor=${LOAD_FACTOR})"
+        fail load "1-minute load is ${load1} (CPUs=${cpus}, factor=${LOAD_FACTOR})"
     else
-        ok "1-minute load is ${load1} (CPUs=${cpus})"
+        ok load "1-minute load is ${load1} (CPUs=${cpus})"
     fi
 }
 
@@ -128,9 +200,9 @@ check_network() {
     [ "$SKIP_NET" = "true" ] && return
     if has_cmd curl; then
         if curl -fsS --max-time 5 -o /dev/null https://www.cloudflare.com/cdn-cgi/trace; then
-            ok "outbound HTTPS works"
+            ok https "outbound HTTPS works"
         else
-            fail "outbound HTTPS failed"
+            fail https "outbound HTTPS failed"
         fi
     else
         log_debug "curl is not installed; skipping outbound HTTPS check"
@@ -138,34 +210,87 @@ check_network() {
 
     if has_cmd nslookup; then
         if nslookup openwrt.org >/dev/null 2>&1; then
-            ok "DNS resolution works"
+            ok dns "DNS resolution works"
         else
-            fail "DNS resolution failed"
+            fail dns "DNS resolution failed"
         fi
     else
         log_debug "nslookup is not installed; skipping DNS check"
     fi
 }
 
-check_pkg_index() {
-    if ! pkg_detect; then
-        fail "no supported package manager found (opkg/apk)"
+# Report whether the device has at least one global-scope IPv6 address.
+has_global_ipv6() {
+    has_cmd ip || return 1
+    ip -6 addr show scope global 2>/dev/null | grep -q 'inet6'
+}
+
+check_ipv6() {
+    [ "$SKIP_NET" = "true" ] && return
+    if ! has_global_ipv6; then
+        # No IPv6 deployment is a valid configuration, so this is not a failure.
+        ok ipv6 "no global IPv6 address; skipping IPv6 connectivity check"
         return
     fi
-    ok "package manager: $PKG_MANAGER"
+    if has_cmd curl; then
+        if curl -fsS -6 --max-time 5 -o /dev/null https://www.cloudflare.com/cdn-cgi/trace; then
+            ok ipv6 "outbound IPv6 HTTPS works"
+        else
+            fail ipv6 "global IPv6 is present but outbound IPv6 HTTPS failed"
+        fi
+    else
+        log_debug "curl is not installed; skipping IPv6 check"
+    fi
+}
+
+check_pkg_index() {
+    if ! pkg_detect; then
+        fail pkg "no supported package manager found (opkg/apk)"
+        return
+    fi
+    ok pkg "package manager: $PKG_MANAGER"
+}
+
+# Render buffered results as a JSON document on stdout.
+emit_json() {
+    result=pass
+    [ "$EXIT_CODE" -eq 0 ] || result=fail
+    printf '{\n  "checks": [\n'
+    first=1
+    while IFS="$TAB" read -r st nm msg; do
+        [ -n "$st" ] || continue
+        if [ "$first" = 1 ]; then first=0; else printf ',\n'; fi
+        printf '    {"name": "%s", "status": "%s", "message": "%s"}' \
+            "$(json_escape "$nm")" "$st" "$(json_escape "$msg")"
+    done <"$RESULT_TMP"
+    printf '\n  ],\n  "result": "%s"\n}\n' "$result"
 }
 
 main() {
     parse_args "$@"
+
+    if [ "$JSON" = "true" ]; then
+        RESULT_TMP=$(mktemp 2>/dev/null || printf '/tmp/owrt-hc-json.%s' "$$")
+        : >"$RESULT_TMP"
+    fi
+
     check_time
+    check_ntp
     check_disk
     check_memory
     check_load
     check_network
+    check_ipv6
     check_pkg_index
 
+    if [ "$JSON" = "true" ]; then
+        emit_json
+        rm -f "$RESULT_TMP"
+        exit "$EXIT_CODE"
+    fi
+
     if [ "$EXIT_CODE" -eq 0 ]; then
-        ok "all checks passed"
+        ok summary "all checks passed"
     else
         log_warn "one or more checks failed"
     fi

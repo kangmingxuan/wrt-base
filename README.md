@@ -12,8 +12,10 @@ wrt-base is a maintenance baseline for ImmortalWrt and OpenWrt routers. It turns
 ## Features
 
 - **Install the maintenance toolset with one command**: Automatically detects `opkg` or `apk` so you do not need per-firmware branches.
-- **Health check script**: Checks time, disk, memory, load, outbound connectivity, DNS, and package manager availability in one pass, with cron-friendly output.
+- **Health check script**: Checks time, NTP, disk, memory, load, outbound IPv4/IPv6 connectivity, DNS, and package manager availability in one pass, with cron-friendly text or `--json` output.
+- **Baseline report script**: Prints a descriptive snapshot of firmware, kernel, resources, network, and package counts as text or JSON, so you can capture the device state before and after maintenance.
 - **Configuration backup script**: Bundles the `sysupgrade` backup with the installed package list, feed configuration, crontab, and a device manifest into a single timestamped archive.
+- **Customizable install set**: Add site-specific packages through a config file (`/etc/wrt-base/install-tools.conf` or `--config FILE`) without editing the script.
 - **POSIX sh implementation**: Runs natively on BusyBox ash with no bash or make dependency.
 - **Built-in tests**: `sh tests/run.sh` runs syntax checks, shellcheck when available, and unit tests.
 - **VS Code Remote-SSH baseline**: Includes the OpenSSH client/server, SFTP server, tar, gzip, and related runtime packages needed for the VS Code Remote-SSH extension to install its server on OpenWrt.
@@ -42,7 +44,8 @@ sh scripts/health-check.sh
 ```
 scripts/
   install-tools.sh        # Tool installation with opkg/apk auto-detection
-  health-check.sh         # Health checks for time, disk, memory, load, network, and DNS
+  health-check.sh         # Health checks for time, NTP, disk, memory, load, network, DNS
+  baseline-report.sh      # Descriptive device snapshot as text or JSON
   backup-config.sh        # Configuration backup (sysupgrade + extras) into a tar.gz
   lib/                    # Shared shell library files sourced by scripts
 tests/
@@ -62,6 +65,8 @@ All commands run directly with `sh` and do not depend on make. If your workstati
 | `sh scripts/install-tools.sh` | Install the full toolset (requires root) |
 | `sh scripts/install-tools.sh --minimal` | Install the minimal toolset (requires root) |
 | `sh scripts/health-check.sh` | Run the health check |
+| `sh scripts/health-check.sh --json` | Run the health check and print JSON results |
+| `sh scripts/baseline-report.sh` | Print a baseline snapshot report |
 | `sh scripts/backup-config.sh` | Create a configuration backup archive (requires root) |
 
 ## Toolset Notes
@@ -73,6 +78,8 @@ All commands run directly with `sh` and do not depend on make. If your workstati
 | **full** (added by default) | coreutils, coreutils-install, diffutils, ethtool, `findutils-*`, gawk, grep, gzip, htop, iperf3, `iputils-*`, libstdcpp6, lsof, openssh-client, openssh-server, openssh-sftp-server, `procps-ng-*`, python3-light, ripgrep, rsync, sed, strace, tar, tree, unzip | Full maintenance experience, including a better baseline for VS Code Remote-SSH and code-server workflows |
 
 `--minimal` skips the full set.
+
+To install extra site-specific packages without editing the script, list them (one package per line, `#` starts a comment) in `/etc/wrt-base/install-tools.conf`, or point `--config FILE` at another file. The default path can be overridden with `OWRT_INSTALL_CONFIG`, and `--no-config` ignores the default file. Extra packages are added on top of the selected mode.
 
 `install` is added via `coreutils-install`. OpenWrt and ImmortalWrt package feeds ship GNU `install` as a split package instead of guaranteeing it through the `coreutils` meta-package, so the repository now installs it explicitly.
 
@@ -97,11 +104,24 @@ sh scripts/health-check.sh \
 - `--disk 85`: warn when disk usage is 85% or higher.
 - `--mem 90`: warn when memory usage is 90% or higher.
 - `--load 2`: warn when 1-minute load divided by CPU count exceeds 2.
-- `--skip-time`: skip the system time sanity check, which is useful before NTP sync or in CI.
-- `--skip-net`: skip HTTPS outbound and DNS checks.
+- `--skip-time`: skip the system time and NTP checks, which is useful before NTP sync or in CI.
+- `--skip-net`: skip HTTPS outbound, DNS, and IPv6 checks.
 - `--quiet`: print only abnormal items, which is useful for cron.
+- `--json`: print results as a JSON document on stdout, which is convenient for monitoring.
+
+The NTP check uses procd (`/etc/init.d/sysntpd status`) when available. The IPv6 check only tests outbound connectivity when the device has a global IPv6 address; devices without IPv6 are reported as a pass.
 
 Exit status: `0` means every check passed; `1` means at least one check failed.
+
+## Baseline Report
+
+```sh
+sh scripts/baseline-report.sh            # human-readable text
+sh scripts/baseline-report.sh --json     # flat JSON object
+sh scripts/baseline-report.sh --output /root/baseline.txt
+```
+
+The report summarizes firmware, kernel, architecture, uptime, CPU/memory/disk/load, egress IPv4/IPv6 addresses, and installed package counts. Capture it before a maintenance window and again afterwards to see what changed.
 
 ## Configuration Backup
 

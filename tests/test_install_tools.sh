@@ -67,4 +67,24 @@ fi
 # unknown options should fail
 assert_false "sh \"$SCRIPT\" --bogus" "unknown option exits non-zero"
 
+# config file adds extra packages on top of the selected mode
+cfg=$(mktemp 2>/dev/null || printf '/tmp/wrt-install-cfg.%s' "$$")
+printf '# a comment\nmytool\n\nzzz-extra\n' >"$cfg"
+out_cfg=$(OWRT_INSTALL_CONFIG="$cfg" sh "$SCRIPT" --print-only)
+assert_contains "$out_cfg" "mytool" "default config file adds mytool"
+assert_contains "$out_cfg" "zzz-extra" "default config file adds zzz-extra"
+
+out_explicit=$(sh "$SCRIPT" --print-only --config "$cfg")
+assert_contains "$out_explicit" "mytool" "--config adds mytool"
+
+out_nocfg=$(OWRT_INSTALL_CONFIG="$cfg" sh "$SCRIPT" --print-only --no-config)
+case "$out_nocfg" in
+    *mytool*) ASSERT_FAILS=$((ASSERT_FAILS + 1)); printf '  FAIL --no-config should ignore the config file\n' >&2 ;;
+    *)        printf '  ok   --no-config ignores the config file\n' ;;
+esac
+rm -f "$cfg"
+
+assert_false "sh \"$SCRIPT\" --config" "--config without a value is rejected"
+assert_false "sh \"$SCRIPT\" --print-only --config /nonexistent/wrt-base.conf" "--config with an unreadable file is rejected"
+
 assert_summary
