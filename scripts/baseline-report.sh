@@ -121,6 +121,21 @@ route_src() {
         | head -n 1
 }
 
+# Pick the preferred egress IPv6 address, favouring a globally routable source
+# (2000::/3) over a ULA (fc00::/7). The kernel can return a ULA src for
+# `route get`, so fall back to scanning global-scope addresses for a GUA.
+egress_ip6() {
+    has_cmd ip || return 0
+    src=$(route_src -6 2606:4700:4700::1111)
+    case "$src" in
+        [23]*) printf '%s\n' "$src"; return ;;
+    esac
+    gua=$(ip -6 addr show scope global 2>/dev/null \
+        | sed -n 's#.*inet6 \([23][0-9a-fA-F:]*\)/.*#\1#p' \
+        | head -n 1)
+    printf '%s\n' "${gua:-$src}"
+}
+
 count_user_packages() {
     case "$PKG_MANAGER" in
         opkg)
@@ -176,7 +191,7 @@ gather() {
     add_section "Network"
     ip4=$(route_src -4 1.1.1.1)
     add wan_ip4 "Egress IPv4" "${ip4:-none}"
-    ip6=$(route_src -6 2606:4700:4700::1111)
+    ip6=$(egress_ip6)
     add wan_ip6 "Egress IPv6" "${ip6:-none}"
     if has_cmd ip && ip -6 addr show scope global 2>/dev/null | grep -qiE 'inet6 [23][0-9a-f]*:'; then
         add ipv6_global "Global IPv6" "yes"

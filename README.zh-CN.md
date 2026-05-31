@@ -96,6 +96,7 @@ sh scripts/health-check.sh \
   --disk 85 \
   --mem 90 \
   --load 2 \
+  --skip-time \
   --skip-net \
   --quiet
 ```
