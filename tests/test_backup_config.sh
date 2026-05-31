@@ -21,6 +21,11 @@ assert_contains "$out" "--output-dir" "--help documents --output-dir"
 # --keep must reject non-numeric values
 assert_false "sh \"$SCRIPT\" --keep abc" "non-numeric --keep is rejected"
 
+# options that expect a value must reject a missing value or a following option
+assert_false "sh \"$SCRIPT\" --keep" "--keep without a value is rejected"
+assert_false "sh \"$SCRIPT\" --output-dir" "--output-dir without a value is rejected"
+assert_false "sh \"$SCRIPT\" --output-dir --dry-run" "--output-dir followed by an option is rejected"
+
 # unknown options should fail
 assert_false "sh \"$SCRIPT\" --bogus" "unknown option exits non-zero"
 
