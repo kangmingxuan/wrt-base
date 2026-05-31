@@ -2,7 +2,7 @@
 # Routers usually do not have make installed, so each target is only a thin
 # wrapper around the equivalent sh command for workstation convenience.
 
-.PHONY: help test install install-minimal print health lint
+.PHONY: help test install install-minimal print health lint backup
 
 help:
 	@echo "Available targets:"
@@ -12,6 +12,7 @@ help:
 	@echo "  make install          Install the full toolset (requires root)"
 	@echo "  make install-minimal  Install the minimal toolset (requires root)"
 	@echo "  make health           Run the health check"
+	@echo "  make backup           Create a configuration backup (requires root)"
 
 test:
 	sh tests/run.sh
@@ -33,3 +34,6 @@ install-minimal:
 
 health:
 	sh scripts/health-check.sh
+
+backup:
+	sh scripts/backup-config.sh

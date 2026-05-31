@@ -13,6 +13,7 @@ wrt-base 是 ImmortalWrt / OpenWrt 路由器的维护基线。它把安装工具
 
 - **一条命令装齐维护工具**：自动检测 `opkg` 或 `apk`，不需要按固件分支手工区分。
 - **健康检查脚本**：一次性检查时间、磁盘、内存、负载、出网、DNS 和包管理器可用性，输出也适合挂到 cron。
+- **配置备份脚本**：把 `sysupgrade` 备份与已安装包列表、软件源配置、crontab 和设备清单一起打包成带时间戳的归档文件。
 - **POSIX sh 实现**：在 BusyBox ash 上原生运行，不依赖 bash 或 make。
 - **自带测试**：`sh tests/run.sh` 会运行语法检查、shellcheck（如果已安装）和单元测试。
 - **VS Code Remote-SSH 基线**：包含 OpenSSH client/server、SFTP server、tar、gzip 和相关运行时依赖，方便 VS Code 的 Remote-SSH 插件在 OpenWrt 上安装并启动服务端。
@@ -42,6 +43,7 @@ sh scripts/health-check.sh
 scripts/
   install-tools.sh        # 自动适配 opkg / apk 的工具安装脚本
   health-check.sh         # 时间、磁盘、内存、负载、网络、DNS 健康检查
+  backup-config.sh        # 配置备份（sysupgrade + 额外项）打包成 tar.gz
   lib/                    # 被脚本 source 的共享 shell 库
 tests/
   run.sh                  # 测试入口（sh -n + shellcheck + 单元测试）
@@ -60,6 +62,7 @@ README.zh-CN.md           # 简体中文 README
 | `sh scripts/install-tools.sh` | 安装 full 工具集（需要 root） |
 | `sh scripts/install-tools.sh --minimal` | 安装 minimal 工具集（需要 root） |
 | `sh scripts/health-check.sh` | 运行健康检查 |
+| `sh scripts/backup-config.sh` | 创建配置备份归档（需要 root） |
 
 ## 工具集说明
 
@@ -97,6 +100,20 @@ sh scripts/health-check.sh \
 - `--quiet`：仅输出异常项，适合 cron。
 
 退出码：`0` 表示全部通过，`1` 表示至少一项失败。
+
+## 配置备份
+
+```sh
+sh scripts/backup-config.sh \
+  --output-dir /root/backups \
+  --keep 5
+```
+
+- `--output-dir DIR`：归档写入目录（默认 `/root/backups`）。
+- `--keep N`：只保留输出目录中最新的 `N` 个备份（`0` 表示全部保留）。
+- `--dry-run`：只暂存并列出文件，不写出最终归档。
+
+每次运行都会生成带时间戳的 `wrt-backup-<host>-<timestamp>.tar.gz`，包含标准 `sysupgrade` 备份，以及已安装包列表、软件源配置、root crontab 和设备清单。在执行任何有风险的维护操作前，把归档复制到设备之外。
 
 ## 提交修改前请运行测试
 
