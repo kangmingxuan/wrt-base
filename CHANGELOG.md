@@ -7,6 +7,13 @@ and this project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Configuration backup script (`scripts/backup-config.sh`) that bundles the
+  `sysupgrade` backup with the explicitly installed package list, feed
+  configuration, root crontab, and a device manifest into a single timestamped
+  archive, with `--output-dir`, `--keep`, and `--dry-run` options.
+
 ## [0.1.0] - 2026-05-31
 
 ### Added

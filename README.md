@@ -13,6 +13,7 @@ wrt-base is a maintenance baseline for ImmortalWrt and OpenWrt routers. It turns
 
 - **Install the maintenance toolset with one command**: Automatically detects `opkg` or `apk` so you do not need per-firmware branches.
 - **Health check script**: Checks time, disk, memory, load, outbound connectivity, DNS, and package manager availability in one pass, with cron-friendly output.
+- **Configuration backup script**: Bundles the `sysupgrade` backup with the installed package list, feed configuration, crontab, and a device manifest into a single timestamped archive.
 - **POSIX sh implementation**: Runs natively on BusyBox ash with no bash or make dependency.
 - **Built-in tests**: `sh tests/run.sh` runs syntax checks, shellcheck when available, and unit tests.
 - **VS Code Remote-SSH baseline**: Includes the OpenSSH client/server, SFTP server, tar, gzip, and related runtime packages needed for the VS Code Remote-SSH extension to install its server on OpenWrt.
@@ -42,6 +43,7 @@ sh scripts/health-check.sh
 scripts/
   install-tools.sh        # Tool installation with opkg/apk auto-detection
   health-check.sh         # Health checks for time, disk, memory, load, network, and DNS
+  backup-config.sh        # Configuration backup (sysupgrade + extras) into a tar.gz
   lib/                    # Shared shell library files sourced by scripts
 tests/
   run.sh                  # Test entry point (sh -n + shellcheck + unit tests)
@@ -60,6 +62,7 @@ All commands run directly with `sh` and do not depend on make. If your workstati
 | `sh scripts/install-tools.sh` | Install the full toolset (requires root) |
 | `sh scripts/install-tools.sh --minimal` | Install the minimal toolset (requires root) |
 | `sh scripts/health-check.sh` | Run the health check |
+| `sh scripts/backup-config.sh` | Create a configuration backup archive (requires root) |
 
 ## Toolset Notes
 
@@ -99,6 +102,20 @@ sh scripts/health-check.sh \
 - `--quiet`: print only abnormal items, which is useful for cron.
 
 Exit status: `0` means every check passed; `1` means at least one check failed.
+
+## Configuration Backup
+
+```sh
+sh scripts/backup-config.sh \
+  --output-dir /root/backups \
+  --keep 5
+```
+
+- `--output-dir DIR`: where to write the archive (default: `/root/backups`).
+- `--keep N`: keep only the `N` most recent backups in the output directory (`0` keeps all).
+- `--dry-run`: stage and list the files without writing the final archive.
+
+Each run produces a timestamped `wrt-backup-<host>-<timestamp>.tar.gz` containing the standard `sysupgrade` backup plus the installed package list, feed configuration, root crontab, and a device manifest. Copy the archive off the device before any risky maintenance operation.
 
 ## Run Tests Before Submitting Changes
 
