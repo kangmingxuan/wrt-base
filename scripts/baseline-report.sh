@@ -123,14 +123,19 @@ route_src() {
 
 # Pick the preferred egress IPv6 address, favouring a globally routable source
 # (2000::/3) over a ULA (fc00::/7). The kernel can return a ULA src for
-# `route get`, so fall back to scanning global-scope addresses for a GUA.
+# `route get`, so fall back to a global address on the egress interface only.
 egress_ip6() {
     has_cmd ip || return 0
-    src=$(route_src -6 2606:4700:4700::1111)
+    route=$(ip -6 route get 2606:4700:4700::1111 2>/dev/null)
+    src=$(printf '%s\n' "$route" | sed -n 's/.*src \([0-9a-fA-F:]*\).*/\1/p' | head -n 1)
     case "$src" in
         [23]*) printf '%s\n' "$src"; return ;;
     esac
-    gua=$(ip -6 addr show scope global 2>/dev/null \
+    # No usable source from the route probe; only inspect the egress interface
+    # so a LAN or delegated GUA on another device is not mislabelled as egress.
+    dev=$(printf '%s\n' "$route" | sed -n 's/.*dev \([^ ]*\).*/\1/p' | head -n 1)
+    [ -n "$dev" ] || { printf '%s\n' "$src"; return; }
+    gua=$(ip -6 addr show dev "$dev" scope global 2>/dev/null \
         | sed -n 's#.*inet6 \([23][0-9a-fA-F:]*\)/.*#\1#p' \
         | head -n 1)
     printf '%s\n' "${gua:-$src}"
