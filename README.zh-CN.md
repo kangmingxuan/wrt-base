@@ -1,5 +1,8 @@
 # wrt-base
 
+[![CI](https://github.com/kangmingxuan/wrt-base/actions/workflows/ci.yml/badge.svg)](https://github.com/kangmingxuan/wrt-base/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 [English](README.md)
 
 wrt-base 是 ImmortalWrt / OpenWrt 路由器的维护基线。它把安装工具、运行检查、准备备份这类一次性动作收敛成可重复执行、可版本化追踪的脚本，方便你先建立一个稳定的系统运维起点。
@@ -20,7 +23,7 @@ wrt-base 是 ImmortalWrt / OpenWrt 路由器的维护基线。它把安装工具
 ```sh
 # 1. 把仓库克隆到路由器上。
 opkg update && opkg install git git-http ca-bundle
-git clone <你的远端 URL> /root/wrt-base
+git clone https://github.com/kangmingxuan/wrt-base.git /root/wrt-base
 cd /root/wrt-base
 
 # 2. 预览待安装的包。
@@ -64,7 +67,7 @@ README.zh-CN.md           # 简体中文 README
 | --- | --- | --- |
 | **base**（始终安装） | bash, ca-bundle, curl, git, git-http, jq, less, nano, tmux | 维护本仓库和拉取远端配置所必需 |
 | **minimal**（始终安装） | bind-dig, ip-full, openssl-util, tcpdump 或 tcpdump-mini | 网络与 TLS 排障所需的最小集合 |
-| **full**（默认追加） | coreutils, coreutils-install, diffutils, ethtool, findutils-\*, gawk, grep, gzip, htop, iperf3, iputils-\*, libstdcpp6, lsof, openssh-client, openssh-server, openssh-sftp-server, procps-ng-\*, python3-light, ripgrep, rsync, sed, strace, tar, tree, unzip | 更完整的维护体验，也更适合作为 VS Code Remote-SSH 和 code-server 的基础环境 |
+| **full**（默认追加） | coreutils, coreutils-install, diffutils, ethtool, `findutils-*`, gawk, grep, gzip, htop, iperf3, `iputils-*`, libstdcpp6, lsof, openssh-client, openssh-server, openssh-sftp-server, `procps-ng-*`, python3-light, ripgrep, rsync, sed, strace, tar, tree, unzip | 更完整的维护体验，也更适合作为 VS Code Remote-SSH 和 code-server 的基础环境 |
 
 `--minimal` 会跳过 full 集合。
 

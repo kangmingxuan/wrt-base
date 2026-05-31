@@ -1,5 +1,8 @@
 # wrt-base
 
+[![CI](https://github.com/kangmingxuan/wrt-base/actions/workflows/ci.yml/badge.svg)](https://github.com/kangmingxuan/wrt-base/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 [Simplified Chinese](README.zh-CN.md)
 
 wrt-base is a maintenance baseline for ImmortalWrt and OpenWrt routers. It turns one-off tasks such as installing tools, running checks, and preparing backups into repeatable, versioned scripts, so you have a stable operational starting point for the system itself.
@@ -20,7 +23,7 @@ wrt-base is a maintenance baseline for ImmortalWrt and OpenWrt routers. It turns
 ```sh
 # 1. Clone the repository onto the router.
 opkg update && opkg install git git-http ca-bundle
-git clone <your remote URL> /root/wrt-base
+git clone https://github.com/kangmingxuan/wrt-base.git /root/wrt-base
 cd /root/wrt-base
 
 # 2. Preview the package list.
@@ -64,7 +67,7 @@ All commands run directly with `sh` and do not depend on make. If your workstati
 | --- | --- | --- |
 | **base** (always installed) | bash, ca-bundle, curl, git, git-http, jq, less, nano, tmux | Required to maintain this repository and pull remote configuration |
 | **minimal** (always installed) | bind-dig, ip-full, openssl-util, tcpdump or tcpdump-mini | Minimum set for network and TLS troubleshooting |
-| **full** (added by default) | coreutils, coreutils-install, diffutils, ethtool, findutils-\*, gawk, grep, gzip, htop, iperf3, iputils-\*, libstdcpp6, lsof, openssh-client, openssh-server, openssh-sftp-server, procps-ng-\*, python3-light, ripgrep, rsync, sed, strace, tar, tree, unzip | Full maintenance experience, including a better baseline for VS Code Remote-SSH and code-server workflows |
+| **full** (added by default) | coreutils, coreutils-install, diffutils, ethtool, `findutils-*`, gawk, grep, gzip, htop, iperf3, `iputils-*`, libstdcpp6, lsof, openssh-client, openssh-server, openssh-sftp-server, `procps-ng-*`, python3-light, ripgrep, rsync, sed, strace, tar, tree, unzip | Full maintenance experience, including a better baseline for VS Code Remote-SSH and code-server workflows |
 
 `--minimal` skips the full set.
 

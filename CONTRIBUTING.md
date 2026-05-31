@@ -38,12 +38,29 @@ Use the [Conventional Commits](https://www.conventionalcommits.org/) format:
 - `test:` tests
 - `chore:` build or miscellaneous maintenance
 
+## Releases
+
+This project follows [Semantic Versioning](https://semver.org/). User-facing
+changes should update `CHANGELOG.md` under the `Unreleased` section.
+
+Maintainers publish releases by creating a signed or annotated tag named
+`vMAJOR.MINOR.PATCH`, for example:
+
+```sh
+git tag -a v0.1.0 -m "v0.1.0"
+git push origin v0.1.0
+```
+
+The release workflow creates or updates the matching GitHub Release from the
+tag and `CHANGELOG.md` entry.
+
 ## Code Style
 
 - Indentation: 4 spaces, as defined in `.editorconfig`.
 - Quote variable expansions: use `"$var"` instead of `$var`.
 - Add a short comment before a function when its purpose is not obvious.
 - Protect each `lib/*.sh` with an `__OWRT_*_LOADED` guard to prevent duplicate sourcing.
+- Contributions are accepted under the repository's MIT license.
 
 ## Reporting Issues
 

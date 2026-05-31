@@ -1,0 +1,22 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project follows [Semantic Versioning](https://semver.org/).
+
+## [Unreleased]
+
+## [0.1.0] - 2026-05-31
+
+### Added
+
+- Initial public release of the wrt-base maintenance baseline.
+- Package installation script with automatic `opkg`/`apk` detection.
+- Health check script for time, disk, memory, load, network, DNS, and package
+  manager availability.
+- POSIX shell test suite and GitHub Actions CI.
+- English and Simplified Chinese documentation.
+
+[Unreleased]: https://github.com/kangmingxuan/wrt-base/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/kangmingxuan/wrt-base/releases/tag/v0.1.0
