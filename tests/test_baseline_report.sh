@@ -36,9 +36,10 @@ rm -f "$tmp"
 assert_false "sh \"$SCRIPT\" --output" "--output without a value is rejected"
 assert_false "sh \"$SCRIPT\" --bogus" "unknown option exits non-zero"
 
-# Egress IPv6 selection: stub `ip` in PATH so the test is independent of the
-# host network. The route egresses with a ULA source on a dev that also carries
-# a GUA, so the report should prefer the GUA on that interface.
+# Egress IPv6 selection: stub `ip` via OWRT_IP_BIN (an absolute path, which
+# busybox execs directly instead of running its built-in applet) so the test is
+# independent of the host network. The route egresses with a ULA source on a
+# dev that also carries a GUA, so the report should prefer the GUA on that dev.
 ip_stub_dir=$(mktemp -d 2>/dev/null || printf '/tmp/wrt-ipstub.%s' "$$")
 mkdir -p "$ip_stub_dir"
 cat >"$ip_stub_dir/ip" <<'STUB'
@@ -55,7 +56,7 @@ case "$*" in
 esac
 STUB
 chmod +x "$ip_stub_dir/ip"
-out6=$(PATH="$ip_stub_dir:$PATH" OWRT_PKG_MANAGER=opkg sh "$SCRIPT")
+out6=$(OWRT_IP_BIN="$ip_stub_dir/ip" OWRT_PKG_MANAGER=opkg sh "$SCRIPT")
 assert_contains "$out6" "2001:db8:abcd:1::2" "egress IPv6 prefers a GUA on the route's dev"
 
 # When the route probe yields no source there is no usable IPv6 egress route,
@@ -67,7 +68,7 @@ case "$*" in
 esac
 STUB
 chmod +x "$ip_stub_dir/ip"
-out_none=$(PATH="$ip_stub_dir:$PATH" OWRT_PKG_MANAGER=opkg sh "$SCRIPT")
+out_none=$(OWRT_IP_BIN="$ip_stub_dir/ip" OWRT_PKG_MANAGER=opkg sh "$SCRIPT")
 case "$out_none" in
     *"Egress IPv6"*none*) printf '  ok   no IPv6 route reports egress IPv6 as none\n' ;;
     *) ASSERT_FAILS=$((ASSERT_FAILS + 1)); printf '  FAIL no IPv6 route should report egress IPv6 as none\n' >&2 ;;

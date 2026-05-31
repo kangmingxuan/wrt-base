@@ -20,6 +20,10 @@ JSON="false"
 OUTPUT=""
 TAB=$(printf '\t')
 KV=""
+# Command used to query addresses/routes. Overridable (with an absolute path)
+# so tests can stub it; busybox runs a bare `ip` as a builtin applet that
+# ignores PATH, but always execs an absolute path.
+IP_BIN="${OWRT_IP_BIN:-ip}"
 
 usage() {
     cat <<'EOF'
@@ -115,8 +119,8 @@ disk_pct() {
 
 route_src() {
     # $1 is the address family flag (-4 or -6); $2 is a probe destination.
-    has_cmd ip || return 0
-    ip "$1" route get "$2" 2>/dev/null \
+    has_cmd "$IP_BIN" || return 0
+    "$IP_BIN" "$1" route get "$2" 2>/dev/null \
         | sed -n 's/.*src \([0-9a-fA-F:.]*\).*/\1/p' \
         | head -n 1
 }
@@ -125,8 +129,8 @@ route_src() {
 # (2000::/3) over a ULA (fc00::/7). The kernel can return a ULA src for
 # `route get`, so fall back to a global address on the egress interface only.
 egress_ip6() {
-    has_cmd ip || return 0
-    route=$(ip -6 route get 2606:4700:4700::1111 2>/dev/null)
+    has_cmd "$IP_BIN" || return 0
+    route=$("$IP_BIN" -6 route get 2606:4700:4700::1111 2>/dev/null)
     src=$(printf '%s\n' "$route" | sed -n 's/.*src \([0-9a-fA-F:]*\).*/\1/p' | head -n 1)
     # No source from the route probe means there is no usable IPv6 egress
     # route; report nothing rather than guessing from unrelated interfaces.
@@ -139,7 +143,7 @@ egress_ip6() {
     dev=$(printf '%s\n' "$route" | sed -n 's/.*dev \([^ ]*\).*/\1/p' | head -n 1)
     gua=""
     if [ -n "$dev" ]; then
-        gua=$(ip -6 addr show dev "$dev" scope global 2>/dev/null \
+        gua=$("$IP_BIN" -6 addr show dev "$dev" scope global 2>/dev/null \
             | sed -n 's#.*inet6 \([23][0-9a-fA-F:]*\)/.*#\1#p' \
             | head -n 1)
     fi
@@ -203,7 +207,7 @@ gather() {
     add wan_ip4 "Egress IPv4" "${ip4:-none}"
     ip6=$(egress_ip6)
     add wan_ip6 "Egress IPv6" "${ip6:-none}"
-    if has_cmd ip && ip -6 addr show scope global 2>/dev/null | grep -qiE 'inet6 [23][0-9a-f]*:'; then
+    if has_cmd "$IP_BIN" && "$IP_BIN" -6 addr show scope global 2>/dev/null | grep -qiE 'inet6 [23][0-9a-f]*:'; then
         add ipv6_global "Global IPv6" "yes"
     else
         add ipv6_global "Global IPv6" "no"
