@@ -7,6 +7,8 @@ and this project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-06-01
+
 ### Added
 
 - Configuration backup script (`scripts/backup-config.sh`) that bundles the
@@ -43,5 +45,6 @@ and this project follows [Semantic Versioning](https://semver.org/).
 - POSIX shell test suite and GitHub Actions CI.
 - English and Simplified Chinese documentation.
 
-[Unreleased]: https://github.com/kangmingxuan/wrt-base/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/kangmingxuan/wrt-base/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/kangmingxuan/wrt-base/releases/tag/v0.2.0
 [0.1.0]: https://github.com/kangmingxuan/wrt-base/releases/tag/v0.1.0
