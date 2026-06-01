@@ -24,6 +24,10 @@ and this project follows [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- `baseline-report.sh` now reports a globally routable IPv6 address (2000::/3)
+  for the egress IPv6 field, falling back to a global address on the egress
+  interface when the kernel returns a ULA source, instead of showing a
+  non-routable ULA.
 - Option parsing in `health-check.sh` and `install-tools.sh` now rejects a
   missing value or an option-like operand instead of silently consuming the
   next argument.
