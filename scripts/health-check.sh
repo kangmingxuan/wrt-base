@@ -151,8 +151,15 @@ check_ntp() {
 
 check_disk() {
     # Avoid a subshell pipeline by storing df output in a temporary file first.
+    # OWRT_DF_FILE points at a file with `df -P` output (useful for tests;
+    # PATH-mocking df does not work under standalone-mode BusyBox, which runs
+    # applets without consulting PATH).
     tmp=$(mktemp 2>/dev/null || printf '/tmp/owrt-hc.%s' "$$")
-    df -P 2>/dev/null | awk 'NR>1' >"$tmp"
+    if [ -n "${OWRT_DF_FILE:-}" ]; then
+        awk 'NR>1' "$OWRT_DF_FILE" >"$tmp"
+    else
+        df -P 2>/dev/null | awk 'NR>1' >"$tmp"
+    fi
     while read -r _fs _blocks _used _avail capacity mount; do
         case "$mount" in
             /|/overlay) ;;
