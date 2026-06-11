@@ -48,9 +48,21 @@ pkg_is_available() {
     name=$1
     case "$PKG_MANAGER" in
         opkg) opkg list "$name" 2>/dev/null | grep -q "^$name - " ;;
-        apk)  apk search --exact "$name" 2>/dev/null | grep -q "^$name$" ;;
+        apk)  apk_is_available "$name" ;;
         *)    return 2 ;;
     esac
+}
+
+# apk-tools 3.x prints "NAME-VERSION" for `apk search --exact`, while its
+# --quiet flag prints the bare name. Prefer --quiet, and fall back to matching
+# both output shapes for apk variants that reject --quiet.
+apk_is_available() {
+    name=$1
+    if out=$(apk search --exact --quiet "$name" 2>/dev/null); then
+        printf '%s\n' "$out" | grep -q "^$name\$"
+        return
+    fi
+    apk search --exact "$name" 2>/dev/null | grep -q -e "^$name\$" -e "^$name-[0-9]"
 }
 
 pkg_is_installed() {

@@ -25,7 +25,10 @@ wrt-base is a maintenance baseline for ImmortalWrt and OpenWrt routers. It turns
 
 ```sh
 # 1. Clone the repository onto the router.
+#    On opkg firmware (OpenWrt 23.05 / ImmortalWrt 24.10):
 opkg update && opkg install git git-http ca-bundle
+#    On apk firmware (newer OpenWrt snapshots):
+apk update && apk add git git-http ca-bundle
 git clone https://github.com/kangmingxuan/wrt-base.git /root/wrt-base
 cd /root/wrt-base
 
@@ -38,6 +41,11 @@ sh scripts/install-tools.sh
 # 4. Run the health check.
 sh scripts/health-check.sh
 ```
+
+> Clone directly on the router rather than copying a checkout from another
+> machine. Copying from macOS in particular (tar, scp, finder copies) can
+> introduce AppleDouble `._*` metadata files that corrupt the Git pack index
+> on the device.
 
 ## Repository Layout
 
@@ -83,6 +91,30 @@ To install extra site-specific packages without editing the script, list them (o
 
 `install` is added via `coreutils-install`. OpenWrt and ImmortalWrt package feeds ship GNU `install` as a split package instead of guaranteeing it through the `coreutils` meta-package, so the repository now installs it explicitly.
 
+### Recommended Bring-Up for Small Routers
+
+For the first installation on a small router, prefer `--minimal` and add only the extras you actually need through the config file, instead of starting with the full set:
+
+```sh
+mkdir -p /etc/wrt-base
+cat > /etc/wrt-base/install-tools.conf <<'EOF'
+coreutils-nohup
+lsof
+ss
+EOF
+sh scripts/install-tools.sh --minimal
+```
+
+This keeps `openssh-server` and Python off the device, which matters when Dropbear is already configured as the only management entry point. You can re-run the script with `--full` later once the baseline is stable.
+
+### Slow Package Feeds
+
+Snapshot firmware installs packages from the official OpenWrt snapshot feed, which can be very slow from some regions (notably mainland China, where double-digit KB/s rates and timeouts on multi-MB packages are common). Keep in mind:
+
+- An apparently stalled install is usually still downloading. Re-running `sh scripts/install-tools.sh --skip-update` is safe: already-installed packages are skipped and only the failed ones are retried.
+- If you build a custom snapshot image, bake the common packages into the image instead of installing them on the device afterwards.
+- Prefer a trusted local proxy or a router-level proxy path over arbitrary third-party snapshot mirrors: snapshot feeds move fast, and a stale mirror can break kernel module (`kmod-*`) installation due to kernel ABI drift.
+
 ## Space Usage
 
 On the current x86_64 feed, `--minimal` installs about 10.8 MiB and `--full` installs about 18.8 MiB, including the auto-selected `tcpdump` package and excluding filesystem/overlay overhead. Actual usage varies by target, feed, and package availability.
@@ -108,6 +140,9 @@ sh scripts/health-check.sh \
 - `--skip-net`: skip HTTPS outbound, DNS, and IPv6 checks.
 - `--quiet`: print only abnormal items, which is useful for cron.
 - `--json`: print results as a JSON document on stdout, which is convenient for monitoring.
+- `--check-rom`: apply the disk threshold to `/rom` as well.
+
+The disk check covers `/` and `/overlay`. The read-only `/rom` squashfs image always reports 100% used on OpenWrt, so it is excluded by default; pass `--check-rom` if you really want it checked.
 
 The NTP check uses procd (`/etc/init.d/sysntpd status`) when available. The IPv6 check only tests outbound connectivity when the device has a global IPv6 address; devices without IPv6 are reported as a pass.
 

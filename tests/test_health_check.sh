@@ -27,4 +27,45 @@ assert_contains "$json" "\"result\":" "json output includes a result field"
 assert_false "sh \"$SCRIPT\" --disk" "--disk without a value is rejected"
 assert_false "sh \"$SCRIPT\" --disk --quiet" "--disk followed by an option is rejected"
 
+# ---- /rom handling -----------------------------------------------------------
+# Mock df with a squashfs layout (/rom always 100% used) and inspect the JSON
+# disk entries, so the assertions stay independent of the host's real mounts
+# and of environment-dependent checks like memory and load.
+
+MOCK_DIR=$(mktemp -d 2>/dev/null || printf '/tmp/owrt-test-hc.%s' "$$")
+mkdir -p "$MOCK_DIR"
+cat >"$MOCK_DIR/df" <<'EOF'
+#!/bin/sh
+cat <<'TABLE'
+Filesystem           1024-blocks    Used Available Capacity Mounted on
+/dev/root                   4096    4096         0     100% /rom
+overlayfs:/overlay          1000      30       970       3% /overlay
+overlayfs:/overlay          1000      30       970       3% /
+TABLE
+EOF
+chmod +x "$MOCK_DIR/df"
+
+hc_json() {
+    PATH="$MOCK_DIR:$PATH" OWRT_PKG_MANAGER=opkg \
+        sh "$SCRIPT" --skip-time --skip-net --json "$@"
+}
+
+json=$(hc_json) || true
+assert_contains "$json" '"name": "disk:/overlay"' "/overlay is checked by default"
+case "$json" in
+    *'"disk:/rom"'*)
+        ASSERT_FAILS=$((ASSERT_FAILS + 1))
+        printf '  FAIL /rom is skipped by default\n' >&2
+        ;;
+    *)
+        printf '  ok   /rom is skipped by default\n'
+        ;;
+esac
+
+json=$(hc_json --check-rom) || true
+assert_contains "$json" '"name": "disk:/rom", "status": "fail"' \
+    "--check-rom flags the full /rom mount"
+
+rm -rf "$MOCK_DIR"
+
 assert_summary
