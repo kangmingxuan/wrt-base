@@ -40,6 +40,7 @@ cat >"$MOCK_DIR/apk" <<'EOF'
 # Fake apk for tests, driven by:
 #   MOCK_APK_STYLE      quiet3x | noquiet-bare | noquiet-versioned
 #   MOCK_APK_AVAILABLE  space-separated names the feed "contains"
+#   MOCK_APK_PRINT      print this name instead of the queried one
 [ "$1" = "search" ] || exit 1
 shift
 quiet=false
@@ -63,6 +64,7 @@ case " $MOCK_APK_AVAILABLE " in
     *" $name "*) ;;
     *) exit 0 ;;
 esac
+name=${MOCK_APK_PRINT:-$name}
 case "$MOCK_APK_STYLE" in
     quiet3x)
         if [ "$quiet" = "true" ]; then
@@ -93,6 +95,19 @@ assert_false "pkg_is_available no-such-pkg" "bare-name missing package is not de
 MOCK_APK_STYLE=noquiet-versioned
 assert_true "pkg_is_available bash" "NAME-VERSION output without --quiet is detected"
 assert_false "pkg_is_available no-such-pkg" "NAME-VERSION missing package is not detected"
+
+# Regex metacharacters in package names (e.g. a dot) must be matched
+# literally: a lookalike name in the output is not a hit.
+export MOCK_APK_PRINT
+MOCK_APK_AVAILABLE="libpython3.12"
+MOCK_APK_PRINT=""
+MOCK_APK_STYLE=noquiet-versioned
+assert_true "pkg_is_available libpython3.12" "dotted package name is detected"
+MOCK_APK_PRINT="libpython3x12"
+assert_false "pkg_is_available libpython3.12" "dot does not match a lookalike in versioned output"
+MOCK_APK_STYLE=quiet3x
+assert_false "pkg_is_available libpython3.12" "dot does not match a lookalike in --quiet output"
+MOCK_APK_PRINT=""
 
 PATH=$OLD_PATH
 rm -rf "$MOCK_DIR"
