@@ -25,7 +25,10 @@ wrt-base 是 ImmortalWrt / OpenWrt 路由器的维护基线。它把安装工具
 
 ```sh
 # 1. 把仓库克隆到路由器上。
+#    opkg 固件（OpenWrt 23.05 / ImmortalWrt 24.10）：
 opkg update && opkg install git git-http ca-bundle
+#    apk 固件（较新的 OpenWrt snapshot）：
+apk update && apk add git git-http ca-bundle
 git clone https://github.com/kangmingxuan/wrt-base.git /root/wrt-base
 cd /root/wrt-base
 
@@ -38,6 +41,10 @@ sh scripts/install-tools.sh
 # 4. 运行健康检查。
 sh scripts/health-check.sh
 ```
+
+> 请直接在路由器上 clone，不要把其他机器上的工作目录复制过去。尤其是从
+> macOS 复制（tar、scp、访达拷贝）可能引入 AppleDouble `._*` 元数据文件，
+> 进而损坏设备上的 Git pack index。
 
 ## 仓库布局
 
@@ -83,6 +90,30 @@ README.zh-CN.md           # 简体中文 README
 
 `install` 命令现在通过 `coreutils-install` 明确安装。OpenWrt 和 ImmortalWrt 的软件包里，GNU `install` 是拆分出来的独立包，不能指望 `coreutils` 元包默认把它带上，因此这里显式补齐。
 
+### 小型路由器的推荐初始化流程
+
+在小型路由器上首次部署时，建议先用 `--minimal`，再通过配置文件按需补充少量额外包，而不是直接装 full 集合：
+
+```sh
+mkdir -p /etc/wrt-base
+cat > /etc/wrt-base/install-tools.conf <<'EOF'
+coreutils-nohup
+lsof
+ss
+EOF
+sh scripts/install-tools.sh --minimal
+```
+
+这样可以避免在设备上引入 `openssh-server` 和 Python——当 Dropbear 已经是唯一管理入口时这一点尤为重要。等基线稳定后，再用 `--full` 重跑即可补齐完整集合。
+
+### 软件源速度慢的情况
+
+Snapshot 固件从 OpenWrt 官方 snapshot 源安装软件包，在部分地区（尤其是中国大陆）可能非常慢，几十 KB/s 的速率和大包下载超时都很常见。注意以下几点：
+
+- 看似卡住的安装通常仍在下载。重跑 `sh scripts/install-tools.sh --skip-update` 是安全的：已安装的包会被跳过，只会重试失败的包。
+- 如果你自编译 snapshot 固件，建议把常用包直接打进镜像，而不是装机后再逐个下载。
+- 优先使用可信的本地代理或路由器侧代理，而不是来历不明的第三方 snapshot 镜像：snapshot 源更新很快，过期镜像可能因内核 ABI 漂移导致内核模块（`kmod-*`）无法安装。
+
 ## 空间占用
 
 在当前 x86_64 软件源下，`--minimal` 大约需要 10.8 MiB，`--full` 大约需要 18.8 MiB，已包含自动选择的 `tcpdump` 包，但不包含文件系统和 overlay 的额外开销。实际占用会因目标架构、软件源和包可用性而变化。
@@ -108,6 +139,9 @@ sh scripts/health-check.sh \
 - `--skip-net`：跳过 HTTPS 出网、DNS 和 IPv6 检查。
 - `--quiet`：仅输出异常项，适合 cron。
 - `--json`：在 stdout 输出 JSON 文档，便于接入监控。
+- `--check-rom`：把磁盘阈值同时应用到 `/rom`。
+
+磁盘检查覆盖 `/` 和 `/overlay`。OpenWrt 上只读的 `/rom` squashfs 镜像恒为 100% 占用，因此默认不检查；确有需要时再加 `--check-rom`。
 
 NTP 检查在可用时优先使用 procd（`/etc/init.d/sysntpd status`）。IPv6 检查仅在设备拥有全局 IPv6 地址时测试出网连通性；没有 IPv6 的设备会记为通过。
 

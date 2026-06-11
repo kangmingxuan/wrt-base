@@ -23,6 +23,7 @@ MEM_THRESHOLD=90
 LOAD_FACTOR=2       # warn when 1-minute load / CPU count exceeds this factor
 SKIP_TIME="false"
 SKIP_NET="false"
+CHECK_ROM="false"
 QUIET="false"
 JSON="false"
 
@@ -40,6 +41,9 @@ Options:
     --load N      Warning factor for 1-minute load / CPU count (default: 2)
     --skip-time   Skip the system time and NTP checks
     --skip-net    Skip outbound HTTPS, DNS, and IPv6 checks
+    --check-rom   Apply the disk threshold to /rom as well (it is read-only
+                  and always 100% used on squashfs systems, so it is skipped
+                  by default)
     --quiet       Print only failing checks
     --json        Print results as a JSON document on stdout
     -h, --help    Show this help message
@@ -54,6 +58,7 @@ parse_args() {
             --load) LOAD_FACTOR=$(need_value "$@") || exit 1; shift ;;
             --skip-time) SKIP_TIME="true" ;;
             --skip-net) SKIP_NET="true" ;;
+            --check-rom) CHECK_ROM="true" ;;
             --quiet) QUIET="true" ;;
             --json) JSON="true" ;;
             -h|--help) usage; exit 0 ;;
@@ -146,11 +151,21 @@ check_ntp() {
 
 check_disk() {
     # Avoid a subshell pipeline by storing df output in a temporary file first.
+    # OWRT_DF_FILE points at a file with `df -P` output (useful for tests;
+    # PATH-mocking df does not work under standalone-mode BusyBox, which runs
+    # applets without consulting PATH).
     tmp=$(mktemp 2>/dev/null || printf '/tmp/owrt-hc.%s' "$$")
-    df -P 2>/dev/null | awk 'NR>1' >"$tmp"
+    if [ -n "${OWRT_DF_FILE:-}" ]; then
+        awk 'NR>1' "$OWRT_DF_FILE" >"$tmp"
+    else
+        df -P 2>/dev/null | awk 'NR>1' >"$tmp"
+    fi
     while read -r _fs _blocks _used _avail capacity mount; do
         case "$mount" in
-            /|/overlay|/rom) ;;
+            /|/overlay) ;;
+            # /rom is the read-only squashfs firmware image and is always
+            # 100% used, so only check it when explicitly requested.
+            /rom) [ "$CHECK_ROM" = "true" ] || continue ;;
             *) continue ;;
         esac
         pct=$(printf '%s' "$capacity" | tr -d '%')

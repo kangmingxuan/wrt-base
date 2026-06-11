@@ -7,6 +7,28 @@ and this project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- apk package availability detection now handles apk-tools 3.x, whose
+  `apk search --exact` prints `NAME-VERSION` instead of the bare name. The
+  check prefers `--quiet` output and falls back to matching both shapes, so
+  `install-tools.sh` no longer reports every package as unavailable on newer
+  OpenWrt snapshots.
+- `health-check.sh` no longer fails on the read-only `/rom` squashfs mount,
+  which is always 100% used on OpenWrt. The disk check now covers `/` and
+  `/overlay` by default, and a new `--check-rom` option restores the old
+  behavior.
+
+### Added
+
+- README guidance for slow snapshot package feeds (notably from mainland
+  China), a recommended `--minimal` plus config-file extras bring-up flow for
+  small routers, and a note to clone directly on the router because copying a
+  checkout from macOS can introduce AppleDouble `._*` files that corrupt the
+  Git pack index.
+- Quick Start now shows the `apk add` bootstrap variant for apk-based
+  OpenWrt snapshots alongside the `opkg` commands.
+
 ## [0.2.0] - 2026-06-01
 
 ### Added
